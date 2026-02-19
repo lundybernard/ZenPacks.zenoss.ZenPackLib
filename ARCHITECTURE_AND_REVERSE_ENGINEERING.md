@@ -310,7 +310,7 @@ graph TB
 
 ```mermaid
 graph LR
-    A["📄 zenpack.yaml<br/>(YAML config)"]
+    A["zenpack.yaml<br/>(YAML config)"]
     B["load_yaml()<br/>(helpers/utils.py)"]
     C["ZenPackSpec()<br/>(root spec)"]
     D["ClassSpec.create()"]
@@ -318,6 +318,10 @@ graph LR
     F["DeviceBase/ComponentBase<br/>(with _relations)"]
     G["Products.ZenModel<br/>(prodbin parent)"]
     H["Zope ZODB<br/>(persisted object)"]
+    I["Zope Schema<br/>(fields/validators)"]
+    J["Info Adapters<br/>(Zuul integration)"]
+    K["Catalog Wrappers<br/>(indexing)"]
+    L["global_catalog"]
 
     A -->|parse as OrderedDict| B
     B -->|instantiate| C
@@ -326,13 +330,11 @@ graph LR
     E -->|creates class<br/>with MRO| F
     F -->|inherits from| G
     G -->|registered as| H
-
-    D -->|also creates<br/>schema| I["Zope Schema<br/>(fields/validators)"]
-    D -->|registers| J["Info Adapters<br/>(Zuul integration)"]
-    D -->|registers| K["Catalog Wrappers<br/>(indexing)"]
-
+    D -->|also creates schema| I
+    D -->|registers| J
+    D -->|registers| K
     I -->|used by| J
-    K -->|indexes in| L["global_catalog"]
+    K -->|indexes in| L
 
     style A fill:#fff9c4
     style B fill:#fffde7
@@ -372,48 +374,51 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph "Zenoss UI Layer"
+    subgraph UI_L["Zenoss UI Layer"]
         UI["Zenoss Web UI<br/>(JavaScript/REST)"]
     end
 
-    subgraph "Zuul API Layer"
+    subgraph ZUUL_L["Zuul API Layer"]
         ZUULFACADE["Zuul Facades<br/>(device, component APIs)"]
         INFOADAPT["Info Adapters<br/>(zuul.py + custom)"]
     end
 
-    subgraph "ZenPackLib Models"
+    subgraph MODEL_L["ZenPackLib Models"]
         DEVOBJ["MyDevice instance<br/>(DeviceBase subclass)"]
         COMPOBJ["MyComponent instance<br/>(ComponentBase subclass)"]
     end
 
-    subgraph "Prodbin Core"
-        PRODOBJ["Products.ZenModel.*<br/>(base instance)"]
-        PROPS["Properties & Methods<br/>(_properties, _relations)"]
+    subgraph PROD_L["Prodbin Core"]
+        PRODOBJ["Products.ZenModel<br/>(base instance)"]
+        PROPS["Properties & Methods"]
     end
 
-    subgraph "Subsystem Access"
-        IMPACTQ["Impact Relationships<br/>(ImpactRelDataProvider)"]
-        DYVIEWQ["DynamicView Relations<br/>(DynamicViewRelatable)"]
-        LINKPROV["Device Linking<br/>(LinkProvider)"]
+    subgraph SUB_L["Subsystem Access"]
+        IMPACTQ["Impact Relationships"]
+        DYVIEWQ["DynamicView Relations"]
+        LINKPROV["Device Linking"]
     end
 
-    subgraph "Search & Catalog"
+    subgraph CAT_L["Search & Catalog"]
         CAT["global_catalog<br/>(Zenoss search)"]
         WRAPPER["IndexableWrapper<br/>(object indexing)"]
     end
 
     UI -->|REST API| ZUULFACADE
     ZUULFACADE -->|adapts| INFOADAPT
-    INFOADAPT -->|accesses| DEVOBJ & COMPOBJ
-
-    DEVOBJ & COMPOBJ -->|MRO lookup| PRODOBJ
+    INFOADAPT -->|accesses| DEVOBJ
+    INFOADAPT -->|accesses| COMPOBJ
+    DEVOBJ -->|MRO lookup| PRODOBJ
+    COMPOBJ -->|MRO lookup| PRODOBJ
     PRODOBJ -->|reads| PROPS
-
-    DEVOBJ & COMPOBJ -->|provides data| IMPACTQ
-    DEVOBJ & COMPOBJ -->|provides data| DYVIEWQ
-    DEVOBJ & COMPOBJ -->|provides data| LINKPROV
-
-    DEVOBJ & COMPOBJ -->|wrapped by| WRAPPER
+    DEVOBJ -->|provides data| IMPACTQ
+    DEVOBJ -->|provides data| DYVIEWQ
+    DEVOBJ -->|provides data| LINKPROV
+    COMPOBJ -->|provides data| IMPACTQ
+    COMPOBJ -->|provides data| DYVIEWQ
+    COMPOBJ -->|provides data| LINKPROV
+    DEVOBJ -->|wrapped by| WRAPPER
+    COMPOBJ -->|wrapped by| WRAPPER
     WRAPPER -->|indexed in| CAT
     CAT -->|searched from| ZUULFACADE
 
@@ -461,53 +466,54 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Configuration"
-        RRDSPEC["RRDTemplateSpec<br/>(from ClassSpec)"]
-        EVENTSPEC["EventClassSpec<br/>(event mappings)"]
+    subgraph CONFIG_L["Configuration"]
+        RRDSPEC["RRDTemplateSpec"]
+        EVENTSPEC["EventClassSpec"]
     end
 
-    subgraph "ZenPackLib Models"
-        DEVICE["DeviceBase<br/>(getRRDTemplates())"]
-        COMPONENT["ComponentBase<br/>(getRRDTemplates())"]
+    subgraph MODEL_L["ZenPackLib Models"]
+        DEVICE["DeviceBase"]
+        COMPONENT["ComponentBase"]
     end
 
-    subgraph "Zenoss Monitoring Engine"
-        COLLECTOR["Zenoss Collector<br/>(datasource plugin)"]
-        MODELER["Modeler Plugins<br/>(device discovery)"]
+    subgraph MON_L["Zenoss Monitoring"]
+        COLLECTOR["Zenoss Collector"]
+        MODELER["Modeler Plugins"]
         EVENTPROC["Event Processor"]
     end
 
-    subgraph "Data Collection"
-        DATASRC["Datasources<br/>(defined in RRDTemplate)"]
-        DATAPTS["Datapoints<br/>(metrics to collect)"]
-        METRICS["Metrics RRD Files<br/>(time-series storage)"]
+    subgraph DATA_L["Data Collection"]
+        DATASRC["Datasources"]
+        DATAPTS["Datapoints"]
+        METRICS["Metrics RRD Files"]
     end
 
-    subgraph "Event Processing"
-        EVENTMATCH["Event Mapping<br/>(EventClassSpec rules)"]
-        EVENTCLASS["Event Classes<br/>(/Events/... hierarchy)"]
+    subgraph EVT_L["Event Processing"]
+        EVENTMATCH["Event Mapping"]
+        EVENTCLASS["Event Classes"]
         EVENTDB["Event Database"]
     end
 
-    subgraph "Discovery"
-        COMPCAT["Component Catalog<br/>(global_catalog)"]
+    subgraph DISC_L["Discovery"]
+        COMPCAT["Component Catalog"]
     end
 
-    RRDSPEC -->|creates| DEVICE & COMPONENT
-    DEVICE & COMPONENT -->|method called| COLLECTOR
-    COLLECTOR -->|gets templates from| DATASRC & DATAPTS
-    COLLECTOR -->|runs plugins| MODELER
-
-    MODELER -->|discovers components| COMPONENT
+    RRDSPEC -->|creates| DEVICE
+    RRDSPEC -->|creates| COMPONENT
+    DEVICE -->|calls| COLLECTOR
+    COMPONENT -->|calls| COLLECTOR
+    COLLECTOR -->|gets| DATASRC
+    COLLECTOR -->|gets| DATAPTS
+    COLLECTOR -->|runs| MODELER
+    MODELER -->|discovers| COMPONENT
     COMPONENT -->|indexed in| COMPCAT
-    COMPCAT -->|results returned| MODELER
-
-    DATASRC & DATAPTS -->|collects| METRICS
-    COLLECTOR -->|sends raw events| EVENTPROC
-
-    EVENTSPEC -->|registers mappings| EVENTCLASS
-    EVENTPROC -->|applies rules| EVENTMATCH
-    EVENTMATCH -->|classifies to| EVENTCLASS
+    COMPCAT -->|results to| MODELER
+    DATASRC -->|collects| METRICS
+    DATAPTS -->|collects| METRICS
+    COLLECTOR -->|sends| EVENTPROC
+    EVENTSPEC -->|registers| EVENTCLASS
+    EVENTPROC -->|applies| EVENTMATCH
+    EVENTMATCH -->|classifies| EVENTCLASS
     EVENTCLASS -->|persists| EVENTDB
 
     style RRDSPEC fill:#f3e5f5
@@ -553,47 +559,30 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph "ZenPackLib Model"
-        BASECLASS["Device/Component<br/>Base Classes"]
-    end
-
-    subgraph "Relationship Definition"
-        IMPSPEC["ImpactTriggerSpec<br/>(ClassSpec definition)"]
-        RELATIONS["_relations tuple<br/>(relationship schema)"]
-    end
-
-    subgraph "Adapter Registration"
-        GSM["gsm.py<br/>(registerAdapter)"]
-    end
-
-    subgraph "Impact Subsystem"
-        IMPACTPKG["ZenPacks.zenoss.Impact"]
-        IMPACTREG["ImpactRelationshipDataProvider<br/>(impact.py)"]
-        IMPACTGRAPH["Impact Graph Engine<br/>(calculates criticality)"]
-    end
-
-    subgraph "DynamicView Subsystem"
-        DVPKG["ZenPacks.zenoss.DynamicView"]
-        DVREG["DynamicViewRelatable<br/>+ RelationsProvider<br/>(dynamicview.py)"]
-        DVNAV["DynamicView Navigator<br/>(shows relationships)"]
-    end
+    BASECLASS["Device/Component<br/>Base Classes"]
+    IMPSPEC["ImpactTriggerSpec"]
+    RELATIONS["_relations tuple"]
+    GSM["gsm.py"]
+    IMPACTPKG["ZenPacks.zenoss.Impact"]
+    IMPACTREG["ImpactDataProvider"]
+    IMPACTGRAPH["Impact Graph Engine"]
+    DVPKG["ZenPacks.zenoss.DynamicView"]
+    DVREG["DynamicViewRelatable"]
+    DVNAV["DynamicView Navigator"]
 
     IMPSPEC -->|creates| RELATIONS
     RELATIONS -->|merged into| BASECLASS
-    IMPSPEC -->|creates adapter| IMPACTREG
-    IMPACTREG -->|registered| GSM
-
-    BASECLASS -->|uses adapter| IMPACTREG
-    IMPACTREG -->|queries _relations| RELATIONS
-    IMPACTREG -->|provides impact<br/>relationships| IMPACTPKG
+    IMPSPEC -->|creates| IMPACTREG
+    IMPACTREG -->|registered in| GSM
+    BASECLASS -->|uses| IMPACTREG
+    IMPACTREG -->|queries| RELATIONS
+    IMPACTREG -->|provides data to| IMPACTPKG
     IMPACTPKG -->|engine uses| IMPACTGRAPH
-
-    IMPSPEC -->|creates adapter| DVREG
-    DVREG -->|registered| GSM
-
-    BASECLASS -->|uses adapter| DVREG
-    DVREG -->|queries _relations| RELATIONS
-    DVREG -->|provides entity<br/>relations| DVPKG
+    IMPSPEC -->|creates| DVREG
+    DVREG -->|registered in| GSM
+    BASECLASS -->|uses| DVREG
+    DVREG -->|queries| RELATIONS
+    DVREG -->|provides data to| DVPKG
     DVPKG -->|navigator uses| DVNAV
 
     style BASECLASS fill:#ffebee
@@ -629,43 +618,29 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph "Index Creation Time"
-        SPEC["ClassSpec.create()<br/>(class definition)"]
-        WRAPPER["IndexableWrapper<br/>(wrapper/*.py)"]
-        REGISTRATION["gsm.registerAdapter<br/>(register wrapper)"]
-    end
-
-    subgraph "Object Creation Time"
-        INSTANCE["Device/Component<br/>instance created"]
-        ADAPT["Zope wraps with<br/>IndexableWrapper"]
-        INDEXING["index_object()<br/>(add to catalog)"]
-    end
-
-    subgraph "Catalog"
-        CATALOG["global_catalog<br/>(search index)"]
-        INDEXES["Field & Text Indexes<br/>(by uid, name, etc.)"]
-    end
-
-    subgraph "Query Time"
-        SEARCH["User search query<br/>(UI or API)")
-        QUERY["catalog.searchResults()<br/>(field query)")
-        RETRIEVE["Return matching UIDs"]
-        FETCH["Fetch objects from ZODB"]
-        DISPLAY["Display in UI"]
-    end
+    SPEC["ClassSpec<br/>creates"]
+    WRAPPER["IndexableWrapper"]
+    REGISTRATION["gsm<br/>registers"]
+    INSTANCE["Device/Component<br/>created"]
+    ADAPT["Zope adapts<br/>wrapper"]
+    INDEXING["index_object<br/>called"]
+    CATALOG["global_catalog<br/>search index"]
+    INDEXES["Field & Text<br/>Indexes"]
+    SEARCH["User search<br/>query"]
+    QUERY["catalog<br/>searchResults"]
+    RETRIEVE["Return<br/>UIDs"]
+    FETCH["Fetch objects<br/>from ZODB"]
+    DISPLAY["Display<br/>in UI"]
 
     SPEC -->|creates| WRAPPER
     WRAPPER -->|registered by| REGISTRATION
-
     INSTANCE -->|adapts to| ADAPT
     ADAPT -->|calls| INDEXING
     INDEXING -->|adds to| CATALOG
-
     CATALOG -->|contains| INDEXES
-
     SEARCH -->|query| QUERY
     QUERY -->|searches| INDEXES
-    QUERY -->|returns matching| RETRIEVE
+    QUERY -->|returns| RETRIEVE
     RETRIEVE -->|resolves| FETCH
     FETCH -->|results| DISPLAY
 
@@ -715,49 +690,35 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "ZenPackLib Layer"
-        DEVBASE["DeviceBase + ModelBase"]
-        COMPBASE["ComponentBase + ModelBase"]
-    end
-
-    subgraph "Factory Pattern"
-        FACTORY["ModelTypeFactory(name, bases)"]
-        DYNCLASS["Dynamically Created Class<br/>(MyDevice, MyComponent)"]
-    end
-
-    subgraph "Zenoss-Prodbin Layer"
-        PRODEVICE["Products.ZenModel.Device"]
-        PRODCOMP["Products.ZenModel.DeviceComponent"]
-        RELATIONS["Products.ZenRelations<br/>(_relations property)"]
-        SCHEMA["Products.ZenModel.Schema<br/>(property definitions)"]
-    end
-
-    subgraph "Zope/ZODB Core"
-        ACQUISITION["Acquisition.Implicit<br/>(object composition)"]
-        PERSISTENT["ZODB.Persistent<br/>(object persistence)"]
-        OSM["Zope Site Manager<br/>(adapter registry)"]
-    end
-
-    subgraph "Zuul UI Bridge"
-        INDEXABLE["IIndexableWrapper<br/>(catalog support)"]
-        INFOADAPTER["IInfo adapter<br/>(Zuul schema)"]
-        PATHREPORT["IPathReporter<br/>(component path)"]
-    end
+    DEVBASE["DeviceBase"]
+    COMPBASE["ComponentBase"]
+    FACTORY["ModelTypeFactory"]
+    DYNCLASS["Dynamic Class<br/>MyDevice"]
+    PRODEVICE["Products.ZenModel<br/>.Device"]
+    PRODCOMP["Products.ZenModel<br/>.DeviceComponent"]
+    RELATIONS["Products<br/>.ZenRelations"]
+    SCHEMA["Products.ZenModel<br/>.Schema"]
+    ACQUISITION["Acquisition.Implicit"]
+    PERSISTENT["ZODB.Persistent"]
+    OSM["Zope Site<br/>Manager"]
+    INDEXABLE["IIndexableWrapper"]
+    INFOADAPTER["IInfo adapter"]
+    PATHREPORT["IPathReporter"]
 
     DEVBASE -->|inherited by| DYNCLASS
     COMPBASE -->|inherited by| DYNCLASS
     FACTORY -->|creates| DYNCLASS
-
-    DYNCLASS -->|inherits from| PRODEVICE & PRODCOMP
-    PRODEVICE & PRODCOMP -->|use| RELATIONS & SCHEMA
-    RELATIONS -->|merged at class<br/>creation time| DYNCLASS
-
-    PRODEVICE & PRODCOMP -->|inherit from| ACQUISITION & PERSISTENT
-    ACQUISITION & PERSISTENT -->|managed by| OSM
-
+    DYNCLASS -->|inherits from| PRODEVICE
+    DYNCLASS -->|inherits from| PRODCOMP
+    PRODEVICE -->|uses| RELATIONS
+    PRODCOMP -->|uses| RELATIONS
+    RELATIONS -->|merged into| DYNCLASS
+    PRODEVICE -->|inherit from| ACQUISITION
+    PRODCOMP -->|inherit from| ACQUISITION
+    ACQUISITION -->|managed by| OSM
+    PERSISTENT -->|managed by| OSM
     DYNCLASS -->|wrapped as| INDEXABLE
     INDEXABLE -->|registered in| OSM
-
     DYNCLASS -->|adapted to| INFOADAPTER
     INFOADAPTER -->|provides| PATHREPORT
     INFOADAPTER -->|registered in| OSM

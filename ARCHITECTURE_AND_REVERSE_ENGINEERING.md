@@ -310,31 +310,31 @@ graph TB
 
 ```mermaid
 graph LR
-    A["zenpack.yaml<br/>(YAML config)"]
-    B["load_yaml()<br/>(helpers/utils.py)"]
-    C["ZenPackSpec()<br/>(root spec)"]
-    D["ClassSpec.create()"]
-    E["ModelTypeFactory<br/>(creates class)"]
-    F["DeviceBase/ComponentBase<br/>(with _relations)"]
-    G["Products.ZenModel<br/>(prodbin parent)"]
-    H["Zope ZODB<br/>(persisted object)"]
-    I["Zope Schema<br/>(fields/validators)"]
-    J["Info Adapters<br/>(Zuul integration)"]
-    K["Catalog Wrappers<br/>(indexing)"]
+    A["zenpack.yaml"]
+    B["load_yaml"]
+    C["ZenPackSpec"]
+    D["ClassSpec.create"]
+    E["ModelTypeFactory"]
+    F["DeviceBase/ComponentBase"]
+    G["Products.ZenModel"]
+    H["Zope ZODB"]
+    I["Zope Schema"]
+    J["Info Adapters"]
+    K["Catalog Wrappers"]
     L["global_catalog"]
 
-    A -->|parse as OrderedDict| B
+    A -->|parse| B
     B -->|instantiate| C
-    C -->|call .create()| D
-    D -->|uses factory| E
-    E -->|creates class<br/>with MRO| F
-    F -->|inherits from| G
-    G -->|registered as| H
-    D -->|also creates schema| I
+    C -->|call| D
+    D -->|uses| E
+    E -->|creates| F
+    F -->|inherits| G
+    G -->|registered| H
+    D -->|creates| I
     D -->|registers| J
     D -->|registers| K
     I -->|used by| J
-    K -->|indexes in| L
+    K -->|indexes| L
 
     style A fill:#fff9c4
     style B fill:#fffde7

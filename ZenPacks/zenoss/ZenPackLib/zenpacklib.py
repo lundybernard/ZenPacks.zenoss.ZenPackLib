@@ -26,14 +26,16 @@ This module provides a single integration point for common ZenPacks.
 
 """
 
+from __future__ import absolute_import, print_function
+
 import logging
 
 # ZenPacks use these to load their YAML files
-from lib.helpers.utils import load_yaml
+from .lib.helpers.utils import load_yaml
 
 # these are the base classes for zenpacklib.Device, zenpacklib.Component,
 # zenpacklib.HardwareComponent
-from lib.base.Component import (
+from .lib.base.Component import (
     Component,
     CPU,
     ExpansionCard,
@@ -52,14 +54,14 @@ from lib.base.Component import (
     TemperatureSensor,
     WinService,
 )
-from lib.base.Device import Device
-from lib.functions import (
+from .lib.base.Device import Device
+from .lib.functions import (
     catalog_search,
     relationships_from_yuml,
     relname_from_classname,
     ucfirst,
 )
-from lib.spec import ZenPackSpec
+from .lib.spec import ZenPackSpec
 
 # PEP-396 version. (https://www.python.org/dev/peps/pep-0396/)
 __version__ = "2.2.0"
@@ -119,7 +121,7 @@ __all__ = (
 
 
 if __name__ == "__main__":
-    from lib.libexec.ZPLCommand import ZPLCommand
+    from .lib.libexec.ZPLCommand import ZPLCommand
 
     script = ZPLCommand()
     script.run()

@@ -6,6 +6,9 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+from six import u as _u
+
 from Products.Zuul.form import schema
 from Products.Zuul.interfaces.component import IComponentInfo
 
@@ -17,8 +20,8 @@ class IHWComponentInfo(IComponentInfo):
     This exists because Zuul has no HWComponent info interface.
     """
 
-    manufacturer = schema.Entity(title=u'Manufacturer')
-    product = schema.Entity(title=u'Model')
+    manufacturer = schema.Entity(title=_u('Manufacturer'))
+    product = schema.Entity(title=_u('Model'))
 
 
 IHardwareComponentInfo = IHWComponentInfo

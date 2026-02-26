@@ -8,6 +8,9 @@
 ##############################################################################
 import os
 import json
+
+import six
+
 from Products.AdvancedQuery import Eq, Or
 from Products.Zuul.decorators import memoize
 from Products.Zuul.catalog.events import IndexingEvent
@@ -94,7 +97,7 @@ class ComponentBase(ModelBase):
         """Return device under which this component/device is contained."""
         obj = self
 
-        for i in xrange(200):
+        for i in six.moves.range(200):
             if isinstance(obj, Device):
                 return obj
 

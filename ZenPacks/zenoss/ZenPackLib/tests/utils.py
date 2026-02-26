@@ -20,6 +20,8 @@ import logging
 
 import six
 
+from six import u as _u
+
 from Products.ZenRelations.Exceptions import RelationshipExistsError
 from Acquisition import aq_base
 from ZenPacks.zenoss.ZenPackLib.lib.helpers.loaders import WarningLoader
@@ -222,7 +224,7 @@ class LogCapture(object):
         self.buffer = io.StringIO()
         WarningLoader.LOG.setLevel(logging.WARNING)
         self.handler = logging.StreamHandler(self.buffer)
-        self.handler.setFormatter(logging.Formatter(u'[%(levelname)s] %(message)s'))
+        self.handler.setFormatter(logging.Formatter(_u('[%(levelname)s] %(message)s')))
         WarningLoader.LOG.addHandler(self.handler)
 
     def stop_capture(self):

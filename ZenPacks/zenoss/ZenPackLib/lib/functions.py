@@ -157,6 +157,8 @@ def get_symbol_name(*args):
     return '.'.join(x for x in args if x)
 
 
+_match_exc_message = re.compile(r"No module named '?(\w[\w.]*)'?").match
+
 def create_module(*args):
     """Import and return module given path args.
 
@@ -178,7 +180,7 @@ def create_module(*args):
             parent_module = create_module(parent_module_name)
             setattr(parent_module, module_parts[-1], module)
 
-        to_find = str(e.message).replace('No module named ', '')
+        to_find = _match_exc_message(str(e)).groups()[0]
         if to_find not in module_name:
             DEFAULTLOG.error('create_module failed loading {} ({})'.format(module_name, e))
 

@@ -11,7 +11,8 @@
 
 # Logging
 import logging
-LOG = logging.getLogger('zen.ZPLTest1')
+
+from six import u as _u
 
 from ZenPacks.zenoss.PythonCollector.datasources.PythonDataSource import (
     PythonDataSource,
@@ -30,6 +31,7 @@ from Products.Zuul.infos.template import RRDDataSourceInfo
 from Products.Zuul.interfaces import IRRDDataSourceInfo
 from Products.Zuul.utils import ZuulMessageFactory as _t
 
+LOG = logging.getLogger('zen.ZPLTest1')
 
 # Constants
 SOURCETYPE = 'ZPLTest1 Stats'
@@ -81,24 +83,24 @@ class IStatsDataSourceInfo(IRRDDataSourceInfo):
     """API Info interface for StatsDataSource."""
 
     classname = schema.TextLine(
-        group=_t(u'ZPLTest1'),
-        title=_t(u'Object Class'))
+        group=_t(_u('ZPLTest1')),
+        title=_t(_u('Object Class')))
 
     base_dn = schema.TextLine(
-        group=_t(u'ZPLTest1'),
-        title=_t(u'Base DN'))
+        group=_t(_u('ZPLTest1')),
+        title=_t(_u('Base DN')))
 
     object_dn = schema.TextLine(
-        group=_t(u'ZPLTest1'),
-        title=_t(u'Object DN'))
+        group=_t(_u('ZPLTest1')),
+        title=_t(_u('Object DN')))
 
     statistic = schema.TextLine(
-        group=_t(u'ZPLTest1'),
-        title=_t(u'Statistic Name'))
+        group=_t(_u('ZPLTest1')),
+        title=_t(_u('Statistic Name')))
 
     granularity = schema.TextLine(
-        group=_t(u'ZPLTest1'),
-        title=_t(u'Collection Granularity'))
+        group=_t(_u('ZPLTest1')),
+        title=_t(_u('Collection Granularity')))
 
 
 @implementer(IStatsDataSourceInfo)

@@ -10,7 +10,8 @@
 """ZPLTest1 health monitoring."""
 
 import logging
-LOG = logging.getLogger('zen.ZPLTest1')
+
+from six import u as _u
 
 from ZenPacks.zenoss.PythonCollector.datasources.PythonDataSource import (
     PythonDataSource,
@@ -27,6 +28,8 @@ from Products.Zuul.infos import ProxyProperty
 from Products.Zuul.infos.template import RRDDataSourceInfo
 from Products.Zuul.interfaces import IRRDDataSourceInfo
 from Products.Zuul.utils import ZuulMessageFactory as _t
+
+LOG = logging.getLogger('zen.ZPLTest1')
 
 # Constants
 SOURCETYPE = 'ZPLTest1 Health'
@@ -51,7 +54,7 @@ class IHealthDataSourceInfo(IRRDDataSourceInfo):
     """ZPLTest1 health datasource API Info interface."""
 
     cycletime = schema.TextLine(
-        title=_t(u'Cycle Time (seconds)'))
+        title=_t(_u('Cycle Time (seconds)')))
 
 
 @implementer(IHealthDataSourceInfo)

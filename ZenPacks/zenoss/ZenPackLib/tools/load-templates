@@ -18,13 +18,15 @@ WARNING: This will delete and recreate the named monitoring templates.
 """
 
 import logging
-LOG = logging.getLogger('zen.load-templates')
 
 import os
 import re
 import sys
 import types
 
+from six import u as _u
+
+LOG = logging.getLogger('zen.load-templates')
 
 def die(msg, *args):
     LOG.fatal(msg, *args)
@@ -93,8 +95,8 @@ class OrderedDictYAMLLoader(YamlLoader):
     def __init__(self, *args, **kwargs):
         YamlLoader.__init__(self, *args, **kwargs)
 
-        self.add_constructor(u'tag:yaml.org,2002:map', type(self).construct_yaml_map)
-        self.add_constructor(u'tag:yaml.org,2002:omap', type(self).construct_yaml_map)
+        self.add_constructor(_u('tag:yaml.org,2002:map'), type(self).construct_yaml_map)
+        self.add_constructor(_u('tag:yaml.org,2002:omap'), type(self).construct_yaml_map)
 
     def construct_yaml_map(self, node):
         data = OrderedDict()

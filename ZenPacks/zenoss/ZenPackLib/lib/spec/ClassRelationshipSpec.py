@@ -6,6 +6,9 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+from six import u as _u
+
 from Products.Zuul.form import schema
 from Products.Zuul.utils import ZuulMessageFactory as _t
 from Products.ZenRelations.RelSchema import ToManyCont, ToOne
@@ -191,7 +194,7 @@ class ClassRelationshipSpec(Spec):
         else:
             relname_count = '{}_count'.format(self.name)
             schemas[relname_count] = schema.Int(
-                title=_t(u'Number of {}'.format(self.label or remote_spec.plural_label)),
+                title=_t(_u('Number of {}').format(self.label or remote_spec.plural_label)),
                 group="Overview",
                 order=self.scaled_order)
 

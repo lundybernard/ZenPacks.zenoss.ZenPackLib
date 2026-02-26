@@ -286,7 +286,7 @@ class ZenPackSpec(Spec):
         """
         productNames = getattr(self.zenpack_module, 'productNames', [])
         self.zenpack_module.productNames = list(
-            set(self.classes) + list(productNames))
+            set(self.classes) | set(productNames))
 
     def create_ordered_component_tree(self):
         """Monkeypatch DeviceRouter.getComponentTree to order components."""

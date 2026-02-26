@@ -1,3 +1,4 @@
+from six import integer_types, string_types, u as _u
 
 from yaml.composer import Composer, ComposerError
 from yaml.nodes import ScalarNode, SequenceNode, MappingNode
@@ -7,7 +8,7 @@ class ComposerFromDict(Composer):
     # composer for non-streaming loader that takes a dictionary
     # as the source of the nodes
 
-    def __init__(self, dataDict, tag=u'tag:yaml.org,2002:map'):
+    def __init__(self, dataDict, tag=_u('tag:yaml.org,2002:map')):
         self.dataDict = dataDict
         self.tag = tag
         # need some kind of mark to keep some logging stuff from failing
@@ -49,29 +50,29 @@ class ComposerFromDict(Composer):
 
     def compose_scalar_node(self, obj):
         if isinstance(obj, (bool,)):
-            tag = u'tag:yaml.org,2002:bool'
-        elif isinstance(obj, (str, unicode)):
-            tag = u'tag:yaml.org,2002:str'
+            tag = _u('tag:yaml.org,2002:bool')
+        elif isinstance(obj, string_types):
+            tag = _u('tag:yaml.org,2002:str')
         elif isinstance(obj, (float,)):
-            tag = u'tag:yaml.org,2002:float'
-        elif isinstance(obj, (int,)):
-            tag = u'tag:yaml.org,2002:int'
+            tag = _u('tag:yaml.org,2002:float')
+        elif isinstance(obj, integer_types):
+            tag = _u('tag:yaml.org,2002:int')
         elif isinstance(obj, (type(None),)):
-            tag = u'tag:yaml.org,2002:null'
+            tag = _u('tag:yaml.org,2002:null')
         else:
-            tag = u'tag:yaml.org,2002:str'
+            tag = _u('tag:yaml.org,2002:str')
         node = ScalarNode(tag, obj, start_mark=self.dummyMark, end_mark=self.dummyMark)
         return node
 
     def compose_sequence_node(self, obj):
-        tag = u'tag:yaml.org,2002:seq'
+        tag = _u('tag:yaml.org,2002:seq')
         node = SequenceNode(tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark)
         for value in obj:
             node.value.append(self.compose_node(value))
         return node
 
     def compose_mapping_node(self, obj):
-        tag = u'tag:yaml.org,2002:map'
+        tag = _u('tag:yaml.org,2002:map')
         node = MappingNode(tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark)
         for key, value in obj.items():
             item_key = self.compose_node(key)

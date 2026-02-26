@@ -13,6 +13,8 @@ from collections import OrderedDict
 
 import six
 
+from six import ensure_text, u as _u
+
 from .ZenPackLibLog import DEFAULTLOG
 
 
@@ -42,7 +44,7 @@ class Dumper(yaml.Dumper):
     LOG = DEFAULTLOG
 
     def dict_representer(self, data):
-        return yaml.MappingNode(u'tag:yaml.org,2002:map', data.items())
+        return yaml.MappingNode(_u('tag:yaml.org,2002:map'), data.items())
 
     def get_representation(self, value, v_type):
         ''''''
@@ -54,9 +56,9 @@ class Dumper(yaml.Dumper):
                 paths = []
                 for path in list(value):
                     # Force the regular expressions to be quoted, so we don't have any issues with that.
-                    pathnodes = [self.represent_scalar(u'tag:yaml.org,2002:str', x, style="'") for x in path]
-                    paths.append(yaml.SequenceNode(u'tag:yaml.org,2002:seq', pathnodes, flow_style=True))
-                return yaml.SequenceNode(u'tag:yaml.org,2002:seq', paths, flow_style=False)
+                    pathnodes = [self.represent_scalar(_u('tag:yaml.org,2002:str'), x, style="'") for x in path]
+                    paths.append(yaml.SequenceNode(_u('tag:yaml.org,2002:seq'), pathnodes, flow_style=True))
+                return yaml.SequenceNode(_u('tag:yaml.org,2002:seq'), paths, flow_style=False)
             elif 'class' in v_type:
                 # The "class" in this context is either a class reference or
                 # a class name (string) that refers to a class defined in
@@ -66,7 +68,7 @@ class Dumper(yaml.Dumper):
             else:
                 return self.represent_list(value)
         else:
-            m = re.match('^SpecsParameter\((.*)\)$', v_type)
+            m = re.match(r'^SpecsParameter\((.*)\)$', v_type)
             if m:
                 spectype = m.group(1)
                 specmapping = OrderedDict()
@@ -97,9 +99,9 @@ class Dumper(yaml.Dumper):
         """
         Generic representer for serializing ZenPack specs to YAML.
         """
-        return self.represent_spec(obj, yaml_tag=u'!ZenPackSpec')
+        return self.represent_spec(obj, yaml_tag=_u('!ZenPackSpec'))
 
-    def represent_spec(self, obj, yaml_tag=u'tag:yaml.org,2002:map', defaults=None):
+    def represent_spec(self, obj, yaml_tag=_u('tag:yaml.org,2002:map'), defaults=None):
         """
         Generic representer for serializing specs to YAML.  Rather than using
         the default PyYAML representer for python objects, we very carefully
@@ -198,7 +200,7 @@ class Dumper(yaml.Dumper):
             node_key = self.represent_data(item_key)
             node_value = self.represent_data(item_value)
             value.append((node_key, node_value))
-        return yaml.MappingNode(u'tag:yaml.org,2002:map', value)
+        return yaml.MappingNode(_u('tag:yaml.org,2002:map'), value)
 
     def represent_severity(self, data):
         """represent Severity"""
@@ -213,8 +215,8 @@ class Dumper(yaml.Dumper):
 
     def represent_multiline(self, data):
         """Represent multi-line text"""
-        for c in u"\u000a\u000d\u001c\u001d\u001e\u0085\u2028\u2029":
-            if c in unicode(data):
+        for c in _u("\u000a\u000d\u001c\u001d\u001e\u0085\u2028\u2029"):
+            if c in ensure_text(data):
                 return self.represent_scalar('tag:yaml.org,2002:str', data, style='|')
         return self.represent_str(data)
 
@@ -303,12 +305,12 @@ Dumper.add_representer(RRDDatapointSpecParams, Dumper.represent_spec)
 Dumper.add_representer(GraphDefinitionSpecParams, Dumper.represent_spec)
 Dumper.add_representer(GraphPointSpecParams, Dumper.represent_spec)
 # representers for python types
-Dumper.add_representer(OrderedDict, Dumper.represent_ordereddict)
-Dumper.add_representer(unicode, SafeRepresenter.represent_unicode)
-Dumper.add_representer(float, SafeRepresenter.represent_float)
-Dumper.add_representer(int, SafeRepresenter.represent_int)
-Dumper.add_representer(str, SafeRepresenter.represent_str)
-Dumper.add_representer(bool, SafeRepresenter.represent_bool)
+# Dumper.add_representer(OrderedDict, Dumper.represent_ordereddict)
+# # Dumper.add_representer(unicode, SafeRepresenter.represent_unicode)
+# Dumper.add_representer(float, SafeRepresenter.represent_float)
+# Dumper.add_representer(int, SafeRepresenter.represent_int)
+# Dumper.add_representer(str, SafeRepresenter.represent_str)
+# Dumper.add_representer(bool, SafeRepresenter.represent_bool)
 Dumper.add_representer(EventClassSpecParams, Dumper.represent_spec)
 Dumper.add_representer(EventClassMappingSpec, Dumper.represent_spec)
 Dumper.add_representer(ProcessClassOrganizerSpecParams, Dumper.represent_spec)

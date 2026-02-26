@@ -21,6 +21,9 @@ import logging
 
 # Zenoss Imports
 import Globals  # noqa
+
+from six import u as _u
+
 from Products.ZenUtils.Utils import unused
 from Products.ZenTestCase.BaseTestCase import BaseTestCase
 unused(Globals)
@@ -217,7 +220,7 @@ class LogCapture(object):
         self.buffer = io.StringIO()
         WarningLoader.LOG.setLevel(logging.WARNING)
         self.handler = logging.StreamHandler(self.buffer)
-        self.handler.setFormatter(logging.Formatter(u'[%(levelname)s] %(message)s'))
+        self.handler.setFormatter(logging.Formatter(_u('[%(levelname)s] %(message)s')))
         WarningLoader.LOG.addHandler(self.handler)
 
     def stop_capture(self):

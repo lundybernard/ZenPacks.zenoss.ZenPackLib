@@ -97,7 +97,7 @@ def load_yaml_single(yaml_doc, loader=ZenPackSpecLoader):
     # if it's a string
     if isinstance(yaml_doc, str) and os.path.isfile(yaml_doc):
         DEFAULTLOG.debug("Loading YAML from {}".format(yaml_doc))
-        yaml_file = file(yaml_doc, 'r')
+        yaml_file = open(yaml_doc, 'r')
         # only certain yaml needs to be loaded when not during ZP install
         if not sys.argv[0].endswith('zenpack.py'):
             must_load = False

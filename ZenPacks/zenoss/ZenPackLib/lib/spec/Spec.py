@@ -6,6 +6,7 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+import hashlib
 import inspect
 import re
 import logging
@@ -199,9 +200,9 @@ class Spec(object):
         """
         # case where any order is a float or all are default=100
         if any(isinstance(x.order, float) for x in items) or all(x.order == 100 for x in items):
-            new_orders = itertools.chain(xrange(1, 101), itertools.repeat(100))
+            new_orders = itertools.chain(six.moves.range(1, 101), itertools.repeat(100))
             for c in sorted(items, key=operator.attrgetter("order")):
-                c.order = int(new_orders.next())
+                c.order = int(six.next(new_orders))
 
     def scale_order(self, scale=1, offset=5):
         """Return linear order transform"""
@@ -292,7 +293,7 @@ class Spec(object):
     def get_init_params(cls):
         """Return a dictionary describing the parameters accepted by __init__"""
 
-        argspec = inspect.getargspec(cls.__init__)
+        argspec = inspect.getfullargspec(cls.__init__)
         if argspec.defaults:
             defaults = dict(zip(argspec.args[-len(argspec.defaults):], argspec.defaults))
         else:
@@ -300,7 +301,7 @@ class Spec(object):
 
         params = OrderedDict()
         for op, param, value in re.findall(
-            "^\s*:(type|param|yaml_param|yaml_block_style)\s+(\S+):\s*(.*)$",
+            r"^\s*:(type|param|yaml_param|yaml_block_style)\s+(\S+):\s*(.*)$",
             cls.__init__.__doc__,
             flags=re.MULTILINE
         ):
@@ -333,6 +334,15 @@ class Spec(object):
                 params[param]['description'] = value
 
         return params
+
+    def __hash__(self):
+        md5 = hashlib.md5()  # noqa: S324
+        for p in self.init_params:
+            default_p = '_{}_defaultvalue'.format(p)
+            val = getattr(self, p, getattr(self, default_p, None))
+            md5.update(hash(val))
+
+        return md5.digest()
 
     def __eq__(self, other, ignore_params=None):
         if ignore_params is None:
@@ -395,8 +405,9 @@ class Spec(object):
             return schema_class
 
         class_factory = self.get_class_factory(bases[0])
+        attributes = dict(attributes)
+        attributes["__module__"] = schema_module.__name__
         schema_class = class_factory(classname, tuple(bases), attributes)
-        schema_class.__module__ = schema_module.__name__
         setattr(schema_module, classname, schema_class)
 
         return schema_class
@@ -411,8 +422,7 @@ class Spec(object):
             return concrete_class
 
         class_factory = self.get_class_factory(schema_class)
-        stub_class = class_factory(classname, (schema_class,), {})
-        stub_class.__module__ = module.__name__
+        stub_class = class_factory(classname, (schema_class,), {"__module__": module.__name__})
         setattr(module, classname, stub_class)
 
         return stub_class

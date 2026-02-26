@@ -19,7 +19,7 @@ from ZenPacks.zenoss.PythonCollector.datasources.PythonDataSource import (
 
 # Zope Imports
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 
 # Zenoss Imports
 from Products.Zuul.infos.template import RRDDataSourceInfo
@@ -46,11 +46,11 @@ class IFaultsDataSourceInfo(IRRDDataSourceInfo):
     """ZPLTest1 datasource API Info interface."""
 
 
+@implementer(IFaultsDataSourceInfo)
 class FaultsDataSourceInfo(RRDDataSourceInfo):
 
     """CiscoAPIC datasource API Info adapter factory."""
 
-    implements(IFaultsDataSourceInfo)
     adapts(FaultsDataSource)
 
     testable = False

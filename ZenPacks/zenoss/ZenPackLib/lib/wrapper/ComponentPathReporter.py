@@ -7,17 +7,17 @@
 #
 ##############################################################################
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 from Products.Zuul.catalog.interfaces import IPathReporter
 from Products.Zuul.catalog.paths import DefaultPathReporter, relPath
 from ..base.ComponentBase import ComponentBase
 
 
+@implementer(IPathReporter)
 class ComponentPathReporter(DefaultPathReporter):
 
     """Global catalog path reporter adapter factory for components."""
 
-    implements(IPathReporter)
     adapts(ComponentBase)
 
     def getPaths(self):

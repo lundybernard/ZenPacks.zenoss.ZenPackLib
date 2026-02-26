@@ -8,7 +8,7 @@
 ##############################################################################
 import zope.schema
 from zope.component import adapts
-from zope.interface import implements, providedBy
+from zope.interface import implementer, providedBy
 
 import six
 
@@ -18,6 +18,7 @@ from Products.Zuul.infos.component import ComponentFormBuilder as BaseComponentF
 from ..helpers.ZenPackLibLog import DEFAULTLOG
 
 
+@implementer(IFormBuilder)
 class ComponentFormBuilder(BaseComponentFormBuilder):
 
     """Base class for all custom FormBuilders.
@@ -26,7 +27,6 @@ class ComponentFormBuilder(BaseComponentFormBuilder):
 
     """
 
-    implements(IFormBuilder)
     adapts(IInfo)
     LOG = DEFAULTLOG
 

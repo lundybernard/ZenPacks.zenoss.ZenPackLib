@@ -19,7 +19,7 @@ from ZenPacks.zenoss.PythonCollector.datasources.PythonDataSource import (
 
 # Zope Imports
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 
 # Zenoss Imports
 from Products.Zuul.form import schema
@@ -54,11 +54,11 @@ class IHealthDataSourceInfo(IRRDDataSourceInfo):
         title=_t(u'Cycle Time (seconds)'))
 
 
+@implementer(IHealthDataSourceInfo)
 class HealthDataSourceInfo(RRDDataSourceInfo):
 
     """ZPLTest1 health datasource API Info adapter factory."""
 
-    implements(IHealthDataSourceInfo)
     adapts(HealthDataSource)
 
     testable = False

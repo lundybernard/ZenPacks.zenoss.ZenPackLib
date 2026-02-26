@@ -20,7 +20,7 @@ from ZenPacks.zenoss.PythonCollector.datasources.PythonDataSource import (
 
 # Zope Imports
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 
 
 # Zenoss Imports
@@ -101,11 +101,11 @@ class IStatsDataSourceInfo(IRRDDataSourceInfo):
         title=_t(u'Collection Granularity'))
 
 
+@implementer(IStatsDataSourceInfo)
 class StatsDataSourceInfo(RRDDataSourceInfo):
 
     """ZPLTest1 stats datasource API Info adapter factory."""
 
-    implements(IStatsDataSourceInfo)
     adapts(StatsDataSource)
 
     testable = False

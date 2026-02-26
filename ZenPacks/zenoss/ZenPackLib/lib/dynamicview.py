@@ -7,7 +7,7 @@
 #
 ##############################################################################
 import collections
-from zope.interface import implements
+from zope.interface import implementer
 from zope.component import adapts
 from .helpers.ZenPackLibLog import DEFAULTLOG
 from ZenPacks.zenoss.DynamicView import BaseRelation, BaseGroup
@@ -18,13 +18,13 @@ from ZenPacks.zenoss.DynamicView.model.adapters import BaseRelatable
 from ZenPacks.zenoss.DynamicView.model.adapters import BaseRelationsProvider
 
 
+@implementer(IRelatable)
 class DynamicViewRelatable(BaseRelatable):
     """Generic DynamicView Relatable adapter (IRelatable)
 
     Places object into a group based upon the class name.
     """
 
-    implements(IRelatable)
 
     @property
     def id(self):
@@ -49,6 +49,7 @@ class DynamicViewRelatable(BaseRelatable):
         return self._adapted.getDynamicViewGroup()
 
 
+@implementer(IGroupMappingProvider)
 class DynamicViewGroupMappingProvider(object):
     """Generic DynamicView IGroupMappingProvider adapter.
 
@@ -56,7 +57,6 @@ class DynamicViewGroupMappingProvider(object):
 
     """
 
-    implements(IGroupMappingProvider)
     adapts(DynamicViewRelatable)
 
     def __init__(self, adapted):
@@ -78,6 +78,7 @@ class DynamicViewGroupMappingProvider(object):
                 icon=data.get('icon', '/zport/dmd/img/icons/noicon.png'))
 
 
+@implementer(IRelationsProvider)
 class DynamicViewRelationsProvider(BaseRelationsProvider):
     """Generic DynamicView RelationsProvider subscription adapter (IRelationsProvider)
 
@@ -89,7 +90,6 @@ class DynamicViewRelationsProvider(BaseRelationsProvider):
     ImpactRelationshipDataProvider and DynamicViewRelatable /
     DynamicViewRelationsProvider for a given model class.
     """
-    implements(IRelationsProvider)
 
     def relations(self, type=TAG_ALL):
         target = IRelatable(self._adapted)

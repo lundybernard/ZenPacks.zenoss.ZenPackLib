@@ -6,7 +6,7 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-from zope.interface import implements
+from zope.interface import implementer
 from zope.component import adapts
 from Products.ZenUtils.guid.interfaces import IGlobalIdentifier
 from .helpers.ZenPackLibLog import DEFAULTLOG
@@ -16,6 +16,7 @@ from ZenPacks.zenoss.Impact.impactd.relations import ImpactEdge
 from ZenPacks.zenoss.Impact.impactd.interfaces import IRelationshipDataProvider
 
 
+@implementer(IRelationshipDataProvider)
 class ImpactRelationshipDataProvider(object):
 
     """Generic Impact RelationshipDataProvider adapter factory.
@@ -27,7 +28,6 @@ class ImpactRelationshipDataProvider(object):
 
     """
 
-    implements(IRelationshipDataProvider)
     adapts(DeviceBase, ComponentBase)
 
     def __init__(self, adapted):

@@ -170,7 +170,7 @@ LOG = logging.getLogger('zenpack.reportable')
 
 import sys
 from zope.component import adapts, getGlobalSiteManager
-from zope.interface import implements, implementedBy
+from zope.interface import implementer, implementedBy
 
 from Zope2.App import zcml
 from Products.ZenModel.ZenModelRM import ZenModelRM
@@ -220,8 +220,8 @@ def adapter_for_class(class_, adapter_interface):
         return adapter_for_class(base_class, adapter_interface)
 
 
+@implementer(IReportableFactory)
 class BaseReportableFactory(ETLBaseReportableFactory):
-    implements(IReportableFactory)
     adapts(ZenModelRM)
 
     class_context = None
@@ -453,8 +453,8 @@ class BaseReportable(ETLBaseReportable):
                     yield (propname + '_count', 'int', 0, MARKER_LENGTH)
 
 
+@implementer(IReportable)
 class BaseManyToManyReportable(Reportable):
-    implements(IReportable)
 
     def __init__(self, fromObject=None, toObject=None,
                  entity_class_name=None):

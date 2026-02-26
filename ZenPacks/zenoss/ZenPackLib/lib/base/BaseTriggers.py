@@ -6,7 +6,6 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-from zope.interface import implements
 from zope.component import adapts
 from Products.ZenUtils.guid.interfaces import IGlobalIdentifier
 from ..helpers.ZenPackLibLog import DEFAULTLOG

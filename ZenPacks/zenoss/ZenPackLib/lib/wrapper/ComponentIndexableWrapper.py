@@ -7,12 +7,13 @@
 #
 ##############################################################################
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 from Products.Zuul.catalog.interfaces import IIndexableWrapper
 from Products.Zuul.catalog.global_catalog import ComponentWrapper
 from ..base.ComponentBase import ComponentBase
 
 
+@implementer(IIndexableWrapper)
 class ComponentIndexableWrapper(ComponentWrapper):
 
     """Indexing wrapper for ZenPack components.
@@ -25,7 +26,6 @@ class ComponentIndexableWrapper(ComponentWrapper):
 
     """
 
-    implements(IIndexableWrapper)
     adapts(ComponentBase)
 
     def objectImplements(self):

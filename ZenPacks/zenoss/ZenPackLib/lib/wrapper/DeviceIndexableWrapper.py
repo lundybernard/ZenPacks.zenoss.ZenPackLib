@@ -7,12 +7,13 @@
 #
 ##############################################################################
 from zope.component import adapts
-from zope.interface import implements
+from zope.interface import implementer
 from Products.Zuul.catalog.interfaces import IIndexableWrapper
 from Products.Zuul.catalog.global_catalog import DeviceWrapper
 from ..base.DeviceBase import DeviceBase
 
 
+@implementer(IIndexableWrapper)
 class DeviceIndexableWrapper(DeviceWrapper):
 
     """Indexing wrapper for ZenPack devices.
@@ -24,7 +25,6 @@ class DeviceIndexableWrapper(DeviceWrapper):
 
     """
 
-    implements(IIndexableWrapper)
     adapts(DeviceBase)
 
     def objectImplements(self):

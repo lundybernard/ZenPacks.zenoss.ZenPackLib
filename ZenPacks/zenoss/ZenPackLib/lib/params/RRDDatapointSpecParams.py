@@ -6,7 +6,7 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-import StringIO
+from io import StringIO
 from Acquisition import aq_base
 from collections import OrderedDict
 from ..spec.RRDDatapointSpec import RRDDatapointSpec
@@ -83,12 +83,12 @@ class RRDDatapointSpecParams(SpecParams, RRDDatapointSpec):
                 # the bottom line.  If they end up the same in there, then
                 # I am certain that they are equivalent.
 
-                io = StringIO.StringIO()
+                io = StringIO()
                 datapoint.exportXml(io)
                 dp_xml = io.getvalue()
                 io.close()
 
-                io = StringIO.StringIO()
+                io = StringIO()
                 # these won't get set on the sample dp
                 sample_dp.aliases = datapoint.aliases
                 sample_dp._zendoc = datapoint._zendoc

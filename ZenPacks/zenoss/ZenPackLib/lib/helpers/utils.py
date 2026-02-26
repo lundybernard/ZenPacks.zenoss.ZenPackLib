@@ -17,7 +17,7 @@ from .loaders import OrderedLoader, ZenPackSpecLoader, ZenPackSpecFromDictLoader
 from ..base.ZenPack import ZenPack
 import inspect
 import re
-from StringIO import StringIO
+from io import StringIO
 
 # list of yaml sections with DEFAULTS capability
 YAML_HAS_DEFAULTS = ['classes', 'properties', 'thresholds', 'datasources',

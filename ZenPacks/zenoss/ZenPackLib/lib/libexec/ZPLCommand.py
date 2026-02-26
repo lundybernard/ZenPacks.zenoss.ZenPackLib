@@ -210,8 +210,8 @@ class ZPLCommand(ZenScriptBase):
         '''return formatted YAML with DEFAULTS optimized'''
         try:
             new_yaml = optimize_yaml(filename)
-            print new_yaml
-        except Exception, e:
+            print(new_yaml)
+        except Exception as e:
             DEFAULTLOG.exception(e)
 
     @classmethod
@@ -223,7 +223,7 @@ class ZPLCommand(ZenScriptBase):
 
         try:
             load_yaml_single(filename, loader=WarningLoader)
-        except Exception, e:
+        except Exception as e:
             DEFAULTLOG.exception(e)
 
     def validate_zenpack_name(self, zenpack_name):
@@ -248,7 +248,7 @@ class ZPLCommand(ZenScriptBase):
         if os.path.exists(zenpack_name):
             sys.exit("{} directory already exists.".format(zenpack_name))
 
-        print "Creating source directory for {}:".format(zenpack_name)
+        print("Creating source directory for {}:".format(zenpack_name))
 
         zenpack_name_parts = zenpack_name.split('.')
 
@@ -263,7 +263,7 @@ class ZPLCommand(ZenScriptBase):
         module_directory = os.path.join(zenpack_name, *zenpack_name_parts)
 
         try:
-            print "  - making directory: {}".format(module_directory)
+            print("  - making directory: {}".format(module_directory))
             os.makedirs(module_directory)
         except OSError as e:
             if e.errno == errno.EEXIST:
@@ -275,7 +275,7 @@ class ZPLCommand(ZenScriptBase):
 
         # Create setup.py.
         setup_py_fname = os.path.join(zenpack_name, 'setup.py')
-        print "  - creating file: {}".format(setup_py_fname)
+        print("  - creating file: {}".format(setup_py_fname))
         with open(setup_py_fname, 'w') as setup_py_f:
             setup_py_f.write(
                 SETUP_PY.format(
@@ -285,7 +285,7 @@ class ZPLCommand(ZenScriptBase):
 
         # Create MANIFEST.in.
         manifest_in_fname = os.path.join(zenpack_name, 'MANIFEST.in')
-        print "  - creating file: {}".format(manifest_in_fname)
+        print("  - creating file: {}".format(manifest_in_fname))
         with open(manifest_in_fname, 'w') as manifest_in_f:
             manifest_in_f.write("graft ZenPacks\n")
 
@@ -296,7 +296,7 @@ class ZPLCommand(ZenScriptBase):
                 os.path.join(*namespace_package.split('.')),
                 '__init__.py')
 
-            print "  - creating file: {}".format(namespace_init_fname)
+            print("  - creating file: {}".format(namespace_init_fname))
             with open(namespace_init_fname, 'w') as namespace_init_f:
                 namespace_init_f.write(
                     "__import__('pkg_resources').declare_namespace(__name__)\n")
@@ -309,13 +309,13 @@ class ZPLCommand(ZenScriptBase):
             dirpath = os.path.join(module_directory, subdir)
             os.makedirs(dirpath)
             init_fname = os.path.join(dirpath, '__init__.py')
-            print "  - creating file: {}".format(init_fname)
+            print("  - creating file: {}".format(init_fname))
             with open(init_fname, 'w') as init_f:
                 init_f.write("\n")
 
         # Create __init__.py in ZenPack module directory.
         init_fname = os.path.join(module_directory, '__init__.py')
-        print "  - creating file: {}".format(init_fname)
+        print("  - creating file: {}".format(init_fname))
         with open(init_fname, 'w') as init_f:
             init_f.write(
                 "import os\n"
@@ -327,7 +327,7 @@ class ZPLCommand(ZenScriptBase):
 
         # Create zenpack.yaml in ZenPack module directory.
         yaml_fname = os.path.join(module_directory, 'zenpack.yaml')
-        print "  - creating file: {}".format(yaml_fname)
+        print("  - creating file: {}".format(yaml_fname))
         with open(yaml_fname, 'w') as yaml_f:
             yaml_f.write("name: {}\n".format(zenpack_name))
 
@@ -344,7 +344,7 @@ class ZPLCommand(ZenScriptBase):
             for dc_name in templates:
                 zpsp.device_classes[dc_name].templates = templates[dc_name]
 
-            print yaml.dump(zpsp, Dumper=Dumper)
+            print(yaml.dump(zpsp, Dumper=Dumper))
 
     def class_diagram(self, diagram_type, filename):
         ''''''
@@ -352,39 +352,39 @@ class ZPLCommand(ZenScriptBase):
             CFG = yaml.load(stream, Loader=ZenPackSpecLoader)
 
         if diagram_type == 'yuml':
-            print "# Classes"
+            print("# Classes")
             for cname in sorted(CFG.classes):
-                print "[{}]".format(cname)
+                print("[{}]".format(cname))
 
-            print "\n# Inheritence"
+            print("\n# Inheritence")
             for cname in CFG.classes:
                 cspec = CFG.classes[cname]
                 for baseclass in cspec.bases:
                     if type(baseclass) != str:
                         baseclass = aq_base(baseclass).__name__
-                    print "[{}]^-[{}]".format(baseclass, cspec.name)
+                    print("[{}]^-[{}]".format(baseclass, cspec.name))
 
-            print "\n# Containing Relationships"
+            print("\n# Containing Relationships")
             for crspec in CFG.class_relationships:
                 if crspec.cardinality == '1:MC':
-                    print "[{}]++{}-{}[{}]".format(
+                    print("[{}]++{}-{}[{}]".format(
                         crspec.left_class, crspec.left_relname,
-                        crspec.right_relname, crspec.right_class)
+                        crspec.right_relname, crspec.right_class))
 
-            print "\n# Non-Containing Relationships"
+            print("\n# Non-Containing Relationships")
             for crspec in CFG.class_relationships:
                 if crspec.cardinality == '1:1':
-                    print "[{}]{}-.-{}[{}]".format(
+                    print("[{}]{}-.-{}[{}]".format(
                         crspec.left_class, crspec.left_relname,
-                        crspec.right_relname, crspec.right_class)
+                        crspec.right_relname, crspec.right_class))
                 if crspec.cardinality == '1:M':
-                    print "[{}]{}-.-{}++[{}]".format(
+                    print("[{}]{}-.-{}++[{}]".format(
                         crspec.left_class, crspec.left_relname,
-                        crspec.right_relname, crspec.right_class)
+                        crspec.right_relname, crspec.right_class))
                 if crspec.cardinality == 'M:M':
-                    print "[{}]++{}-.-{}++[{}]".format(
+                    print("[{}]++{}-.-{}++[{}]".format(
                         crspec.left_class, crspec.left_relname,
-                        crspec.right_relname, crspec.right_class)
+                        crspec.right_relname, crspec.right_class))
         else:
             DEFAULTLOG.error("Diagram type '{}' is not supported.".format(diagram_type))
 
@@ -424,22 +424,22 @@ class ZPLCommand(ZenScriptBase):
                 included_paths.add(component.meta_type + ":" + "/".join(path) + ":" + facet.meta_type)
                 class_summary[component.meta_type].add(facet.meta_type)
 
-        print "Paths\n-----\n"
+        print("Paths\n-----\n")
         for path in sorted(all_paths):
             if path in included_paths:
                 if "/" not in path:
                     # normally all direct relationships are included
-                    print "DIRECT  " + path
+                    print("DIRECT  " + path)
                 else:
                     # sometimes extra paths are pulled in due to extra_paths
                     # configuration.
-                    print "EXTRA   " + path
+                    print("EXTRA   " + path)
             else:
-                print "EXCLUDE " + path
+                print("EXCLUDE " + path)
 
-        print "\nClass Summary\n-------------\n"
+        print("\nClass Summary\n-------------\n")
         for source_class in sorted(class_summary.keys()):
-            print "{} is reachable from {}".format(source_class, ", ".join(sorted(class_summary[source_class])))
+            print("{} is reachable from {}".format(source_class, ", ".join(sorted(class_summary[source_class]))))
 
     def zenpack_templatespecs(self, zenpack_name):
         """Return dictionary of RRDTemplateSpecParams by device_class.
@@ -498,7 +498,7 @@ class ZPLCommand(ZenScriptBase):
                 zpsp.event_classes[ec_name] = eventclasses[ec_name]
                 zpsp.event_classes[ec_name].mappings = eventclasses[ec_name].mappings
 
-            print yaml.dump(zpsp, Dumper=Dumper)
+            print(yaml.dump(zpsp, Dumper=Dumper))
 
     def zenpack_eventclassspecs(self, zenpack_name):
         zenpack = self.dmd.ZenPackManager.packs._getOb(zenpack_name, None)
@@ -537,7 +537,7 @@ class ZPLCommand(ZenScriptBase):
             for pc_name in processclasses:
                 zpsp.process_class_organizers[pc_name].process_classes = processclasses[pc_name].process_classes
 
-            print yaml.dump(zpsp, Dumper=Dumper)
+            print(yaml.dump(zpsp, Dumper=Dumper))
 
     def zenpack_processclassspecs(self, zenpack_name):
         zenpack = self.dmd.ZenPackManager.packs._getOb(zenpack_name, None)

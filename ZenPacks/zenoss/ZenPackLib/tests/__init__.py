@@ -13,6 +13,9 @@ import yaml
 import unittest
 import difflib
 import zope.component
+
+import six
+
 from zope.event import notify
 from zope.traversing.adapters import DefaultTraversable
 from transaction._transaction import Transaction
@@ -20,7 +23,7 @@ from transaction._transaction import Transaction
 # Zenoss Imports
 import Globals 
 import Products.ZenTestCase
-from Products.Five import zcml
+from Zope2.App import zcml
 from Products.DataCollector.ApplyDataMap import ApplyDataMap
 from Products.Zuul.catalog.events import IndexingEvent
 from Products.ZenUtils.Utils import unused
@@ -87,7 +90,7 @@ class ZPLBaseTestCase(BaseTestCase):
         self.initialize(self.yaml_doc)
         # Not included with BaseTestCase. Needed to test that UI
         # components have been properly registered.
-        from Products.Five import zcml
+        from Zope2.App import zcml
         import Products.ZenUI3
         zcml.load_config('configure.zcml', Products.ZenUI3)
 
@@ -152,7 +155,7 @@ class ZPLBaseTestCase(BaseTestCase):
     def update_tc_attributes(self):
         """Set additional attributes"""
         if isinstance(self.tc_attributes, dict):
-            for k, v in self.tc_attributes.iteritems():
+            for k, v in six.iteritems(self.tc_attributes):
                 setattr(self, k, v)
 
     def install_zenpack(self, cfg):
@@ -297,7 +300,7 @@ class ZPLTestCaseLayerBase(ZenossTestCaseLayer):
         if not cls.tc or cls.reset:
             cls.tc = InitializerTestCase("test_nothing")
             if isinstance(cls.tc_attributes, dict):
-                for k, v in cls.tc_attributes.iteritems():
+                for k, v in six.iteritems(cls.tc_attributes):
                     setattr(cls.tc, k, v)
             cls.tc.setUp()
             cls.tc.dmd.REQUEST = None

@@ -7,6 +7,9 @@
 #
 ##############################################################################
 import re
+
+import six
+
 from .Spec import Spec
 
 
@@ -228,7 +231,7 @@ class RRDDatapointSpec(Spec):
         if self.description is not None:
             datapoint.description = self.description
         if self.extra_params:
-            for param, value in self.extra_params.iteritems():
+            for param, value in six.iteritems(self.extra_params):
                 if param in [x['id'] for x in datapoint._properties]:
                     setattr(datapoint, param, value)
                 else:

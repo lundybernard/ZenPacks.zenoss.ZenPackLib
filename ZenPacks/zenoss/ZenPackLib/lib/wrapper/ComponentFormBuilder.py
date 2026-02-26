@@ -9,6 +9,9 @@
 import zope.schema
 from zope.component import adapts
 from zope.interface import implements, providedBy
+
+import six
+
 from Products.Zuul.form.interfaces import IFormBuilder
 from Products.Zuul.interfaces import IInfo
 from Products.Zuul.infos.component import ComponentFormBuilder as BaseComponentFormBuilder
@@ -68,7 +71,7 @@ class ComponentFormBuilder(BaseComponentFormBuilder):
                 else:
                     include = bool(item)
                 return include
-            for k,v in filter(_filter, f.iteritems()):
+            for k,v in filter(_filter, six.iteritems(f)):
                 c = self._dict(v)
                 c['name'] = k
                 value =  getattr(self.context, k, None)

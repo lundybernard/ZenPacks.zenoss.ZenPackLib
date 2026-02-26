@@ -47,7 +47,7 @@ class TestCase(BaseTestCase):
         super(TestCase, self).afterSetUp()
         # Not included with BaseTestCase. Needed to test that UI
         # components have been properly registered.
-        from Products.Five import zcml
+        from Zope2.App import zcml
         import Products.ZenUI3
         zcml.load_config('configure.zcml', Products.ZenUI3)
 

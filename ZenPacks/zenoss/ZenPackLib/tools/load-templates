@@ -116,7 +116,7 @@ class OrderedDictYAMLLoader(YamlLoader):
             key = self.construct_object(key_node, deep=deep)
             try:
                 hash(key)
-            except TypeError, exc:
+            except TypeError as exc:
                 raise yaml.constructor.ConstructorError(
                     'while constructing a mapping',
                     node.start_mark, 'found unacceptable key ({})'.format(exc),
@@ -362,12 +362,12 @@ def add_datapoint(datasource, id_, cfg):
             log_for(alias, "formula = {}".format(formula))
 
             if os.environ.get('ALIASES'):
-                print "{}|{}|{}|{}|{}".format(
+                print("{}|{}|{}|{}|{}".format(
                     datapoint.deviceClass().getPrimaryUrlPath(),
                     datapoint.rrdTemplate().id,
                     datapoint.id,
                     alias_id,
-                    formula)
+                    formula))
 
     apply_properties(datapoint, cfg, ignore=['aliases'])
 

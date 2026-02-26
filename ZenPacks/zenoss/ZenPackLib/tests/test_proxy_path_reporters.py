@@ -11,6 +11,9 @@
 """
     Ensure that path reporters work correctly for ZPL proxy classes
 """
+
+import six
+
 from ZenPacks.zenoss.ZenPackLib.tests import ZPLBaseTestCase
 from ZenPacks.zenoss.ZenPackLib.lib.base.ComponentBase import ComponentBase
 
@@ -71,7 +74,7 @@ class TestPathReporters(ZPLBaseTestCase):
         service_path = ('', 'zport', 'dmd', 'Services', 'serviceclasses', 'test', 'instances', 'subclass4-0')
         location_path = ('', 'zport', 'dmd', 'Locations', 'SomePlace', 'devices', 'mydev-0')
 
-        for cls_name, cls_data in self.objects.iteritems():
+        for cls_name, cls_data in six.iteritems(self.objects):
             ob = cls_data.get('ob')
 
             if cls_name not in ['MyDev', 'SubClass3', 'SubClass4']:

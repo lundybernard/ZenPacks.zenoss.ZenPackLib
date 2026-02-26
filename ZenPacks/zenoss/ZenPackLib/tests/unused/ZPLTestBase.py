@@ -34,7 +34,7 @@ RUN_TESTS = False
 if os.getenv('RUN_BROKEN_TESTS'):
     RUN_TESTS = True
 else:
-    print "Set RUN_BROKEN_TESTS environment variable to enable unit testing"
+    print("Set RUN_BROKEN_TESTS environment variable to enable unit testing")
 
 
 class ZPLTestBase(BaseTestCase):

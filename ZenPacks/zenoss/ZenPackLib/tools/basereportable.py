@@ -172,7 +172,7 @@ import sys
 from zope.component import adapts, getGlobalSiteManager
 from zope.interface import implements, implementedBy
 
-from Products.Five import zcml
+from Zope2.App import zcml
 from Products.ZenModel.ZenModelRM import ZenModelRM
 from Products.ZenModel.Device import Device
 from Products.ZenRelations.RelSchema import ToOne, ToMany
@@ -348,7 +348,7 @@ class BaseReportable(ETLBaseReportable):
 
                 seen_target_entity.add(target_entity)
                 self.rel_property_name[relName] = target_entity
-            except Exception, e:
+            except Exception as e:
                 LOG.error("Error processing relationship {} on {}: {}").format(relName, self.context, e)
 
     @property
@@ -518,14 +518,14 @@ class DumpReportables(ZenScriptBase):
                     # not my problem.
                     continue
 
-                print "      adapter={}.{} -> {}.{}".format(
+                print("      adapter={}.{} -> {}.{}".format(
                     factory.__class__.__module__,
                     factory.__class__.__name__,
                     reportable.__class__.__module__,
                     reportable.__class__.__name__,
-                )
-                print "      reportable.entity_class_name={}".format(reportable.entity_class_name)
-                print "      reportable.id={}, sid={}".format(reportable.id, reportable.sid)
+                ))
+                print("      reportable.entity_class_name={}".format(reportable.entity_class_name))
+                print("      reportable.id={}, sid={}".format(reportable.id, reportable.sid))
 
                 props = reportable.reportProperties()
 
@@ -535,11 +535,11 @@ class DumpReportables(ZenScriptBase):
                         continue
 
                     if length == -1:
-                        print "         {} [{}] = {}".format(name, type_, value)
+                        print("         {} [{}] = {}".format(name, type_, value))
                     else:
-                        print "         {} [{}.{}] = {}".format(name, type_, length, value)
+                        print("         {} [{}.{}] = {}".format(name, type_, length, value))
 
-                print ""
+                print("")
 
 
 def main():

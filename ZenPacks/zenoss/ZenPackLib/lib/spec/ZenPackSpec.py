@@ -12,7 +12,10 @@ import importlib
 import inspect
 import operator
 import types
-from Products.Five import zcml
+
+import six
+
+from Zope2.App import zcml
 from Products.ZenUtils.Utils import monkeypatch
 from Products.Zuul.routers.device import DeviceRouter
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
@@ -230,13 +233,13 @@ class ZenPackSpec(Spec):
         """Implement specification."""
         self.create_zenpack_class()
 
-        for spec in self.zProperties.itervalues():
+        for spec in six.itervalues(self.zProperties):
             spec.create()
 
-        for spec in self.classes.itervalues():
-            schema = spec.model_schema_class
+        for spec in six.itervalues(self.classes):
+            _ = spec.model_schema_class
 
-        for spec in self.classes.itervalues():
+        for spec in six.itervalues(self.classes):
             spec.create_registered()
 
         self.create_product_names()
@@ -257,7 +260,7 @@ class ZenPackSpec(Spec):
             required=(Device,),
             provided=IExpandedLinkProvider)
 
-        for key, provider in self.link_providers.iteritems():
+        for key, provider in six.iteritems(self.link_providers):
             class_name = provider.link_class.split('.')
             try:
                 module = importlib.import_module('.'.join(class_name[:-1]))
@@ -283,18 +286,18 @@ class ZenPackSpec(Spec):
         """
         productNames = getattr(self.zenpack_module, 'productNames', [])
         self.zenpack_module.productNames = list(
-            set(list(self.classes.iterkeys()) + list(productNames)))
+            set(self.classes) + list(productNames))
 
     def create_ordered_component_tree(self):
         """Monkeypatch DeviceRouter.getComponentTree to order components."""
         device_meta_types = {
             x.meta_type
-            for x in self.classes.itervalues()
+            for x in six.itervalues(self.classes)
             if x.is_device}
 
         order = {
             x.meta_type: x.scaled_order
-            for x in self.classes.itervalues()}
+            for x in six.itervalues(self.classes)}
 
         def getComponentTree(self, uid=None, id=None, **kwargs):
             # We do our own sorting.
@@ -459,11 +462,11 @@ class ZenPackSpec(Spec):
 
         device_classes = [
             x.model_class
-            for x in self.classes.itervalues()
+            for x in six.itervalues(self.classes)
             if Device in x.resolved_bases]
 
         # Add imported device objects
-        for kls in self.imported_classes.itervalues():
+        for kls in six.itervalues(self.imported_classes):
             if 'deviceClass' in [x[0] for x in kls._relations]:
                 device_classes.append(kls)
 
@@ -556,10 +559,10 @@ class ZenPackSpec(Spec):
     def create_zenpack_class(self):
         """Create ZenPack class."""
         packZProperties = [
-            x.packZProperties for x in self.zProperties.itervalues()]
+            x.packZProperties for x in six.itervalues(self.zProperties)]
 
         packZProperties_data = {}
-        for x in self.zProperties.itervalues():
+        for x in six.itervalues(self.zProperties):
             packZProperties_data.update(x.packZProperties_data)
 
         attributes = {
@@ -576,7 +579,7 @@ class ZenPackSpec(Spec):
         attributes['GLOBAL_CATALOGS'] = []
         global_catalog_classes = {}
         for (class_, class_spec) in self.classes.items():
-            for (p, property_spec) in class_spec.properties.items():
+            for property_spec in class_spec.properties.values():
                 if property_spec.index_scope in ('both', 'global'):
                     global_catalog_classes[class_] = True
                     continue
@@ -599,7 +602,7 @@ class ZenPackSpec(Spec):
         programatically-registered adapters are in place for testing.
 
         """
-        for spec in self.classes.itervalues():
+        for spec in six.itervalues(self.classes):
             spec.test_setup()
 
         self.create_global_js_snippet()

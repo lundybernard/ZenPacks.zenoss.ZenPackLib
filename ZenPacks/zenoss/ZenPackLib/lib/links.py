@@ -8,6 +8,9 @@
 ##############################################################################
 
 import logging
+
+import six
+
 from .functions import catalog_search
 
 log = logging.getLogger('zen.ZenPackLib')
@@ -32,10 +35,10 @@ class DeviceLinkProvider(object):
                                                                             self.device.zenpack_name))
             return links
 
-        for lp_key, link_provider in link_providers.iteritems():
+        for lp_key, link_provider in six.iteritems(link_providers):
             class_name = '.'.join([self.device.zPythonClass, self.device.__class__.__name__])
             queries = {}
-            for key, value in link_provider.queries.iteritems():
+            for key, value in six.iteritems(link_provider.queries):
                 try:
                     # look for attribute of device
                     queries[key] = getattr(self.device, value)

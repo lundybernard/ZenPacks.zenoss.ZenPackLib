@@ -7,6 +7,9 @@
 #
 ##############################################################################
 from Products.ZenUtils.Search import makeFieldIndex, makeKeywordIndex
+
+import six
+
 from ..functions import catalog_search
 from ..helpers.ZenPackLibLog import DEFAULTLOG
 
@@ -140,7 +143,7 @@ class CatalogBase(object):
             'keyword': makeKeywordIndex,
             }
 
-        for index_name, index_type in indexes.iteritems():
+        for index_name, index_type in six.iteritems(indexes):
             index_factory = index_factories.get(
                 index_type.lower(),
                 makeFieldIndex)

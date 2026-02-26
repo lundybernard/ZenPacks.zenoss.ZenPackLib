@@ -6,6 +6,9 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+import six
+
 from Acquisition import aq_base
 from .Spec import Spec
 
@@ -102,7 +105,7 @@ class OrganizerSpec(Spec):
     def set_zproperties(self, dmd):
         """Set zProperties on a given Organizer according to the Spec"""
         org_obj = self.get_organizer(dmd)
-        for zprop, value in self.zProperties.iteritems():
+        for zprop, value in six.iteritems(self.zProperties):
             if org_obj.getPropertyType(zprop) is None and org_obj.getProperty(zprop) is None:
                 self.LOG.error(
                     "Unable to set zProperty %s on %s (undefined zProperty)",

@@ -12,6 +12,9 @@
 """
     Test that device classes can be removed (ZEN-18134)
 """
+
+import six
+
 from ZenPacks.zenoss.ZenPackLib.tests import ZPLBaseTestCase
 
 YAML_DOC = """
@@ -38,13 +41,13 @@ class TestDeviceClassRemoval(ZPLBaseTestCase):
         cfg = config.get('cfg')
 
         # create the device class
-        for dcname, dcspec in cfg.device_classes.items():
+        for dcspec in cfg.device_classes.values():
             dcspec.create_organizer(self.dmd)
             # verify that it was created
             self.assertTrue(self.device_class_exists(dcspec.path),
                             'Device class {} was not created'.format(dcspec.path))
 
-        for dcname, dcspec in cfg.device_classes.iteritems():
+        for dcspec in six.itervalues(cfg.device_classes):
             if dcspec.remove:
                 dcspec.remove_organizer(self.dmd)
                 # verify that it was removed

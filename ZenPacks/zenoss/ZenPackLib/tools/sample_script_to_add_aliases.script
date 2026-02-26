@@ -9,7 +9,7 @@ for x in dmd.Devices.Server.HP.getAllRRDTemplates():
                 if gp.dpName in dp:
                     (dpobj, dsobj, tobj) = dp[gp.dpName]
                     if len(dpobj.aliases()) < 1:
-                        print 't.id: %s ds.id: %s dp.id: %s ' % (tobj.id, dsobj.id, dpobj.id)
+                        print('t.id: %s ds.id: %s dp.id: %s ' % (tobj.id, dsobj.id, dpobj.id))
                         userData = raw_input('New Alias Id : ')
                         dpobj.addAlias(userData, '')
                     else:

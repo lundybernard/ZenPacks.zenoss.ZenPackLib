@@ -17,6 +17,9 @@ import yaml
 import os
 import subprocess
 import logging
+
+import six
+
 from Products.ZenRelations.Exceptions import RelationshipExistsError
 from Acquisition import aq_base
 from ZenPacks.zenoss.ZenPackLib.lib.helpers.loaders import WarningLoader
@@ -61,34 +64,34 @@ class ClassObjectHelper(object):
     def create_event_class_objects(self):
         """Create DMD objects for event classes and templates"""
         self.event_class_objects = {}
-        for ec_name, ec_spec in self.cfg.event_classes.iteritems():
+        for ec_name, ec_spec in six.iteritems(self.cfg.event_classes):
             ec_org = ec_spec.create_organizer(self.dmd)
             self.event_class_objects[ec_name] = {'ob': ec_org, 'mappings': {}}
-            for map_name, map_spec in ec_spec.mappings.items():
+            for map_name in ec_spec.mappings:
                 map = ec_org.instances._getOb(ec_org.prepId(map_name))
                 self.event_class_objects[ec_name]['mappings'][map_name] = map
 
     def create_process_class_objects(self):
         """Create DMD objects for process classes and templates"""
         self.process_class_objects = {}
-        for pc_name, pc_spec in self.cfg.process_class_organizers.iteritems():
+        for pc_name, pc_spec in six.iteritems(self.cfg.process_class_organizers):
             pc_org = pc_spec.create_organizer(self.dmd)
             self.process_class_objects[pc_name] = {'ob': pc_org, 'classes': {}}
-            for map_name, map_spec in pc_spec.process_classes.items():
+            for map_name in pc_spec.process_classes:
                 map = pc_org.osProcessClasses._getOb(pc_org.prepId(map_name))
                 self.process_class_objects[pc_name]['classes'][map_name] = map
 
     def create_device_class_objects(self):
         """Create DMD objects for device classes and templates"""
         self.device_class_objects = {}
-        for dc_name, dc_spec in self.cfg.device_classes.iteritems():
+        for dc_name, dc_spec in six.iteritems(self.cfg.device_classes):
             dc_ob = self.dmd.Devices.createOrganizer(dc_spec.path)
             self.device_class_objects[dc_name] = {'ob': dc_ob, 'templates': {}}
             # set zproperties
-            for zprop_name, zprop_spec in self.cfg.zProperties.iteritems():
+            for zprop_name, zprop_spec in six.iteritems(self.cfg.zProperties):
                 dc_ob._setProperty(zprop_name, zprop_spec.default)
             # create templates
-            for mt_name, mt_spec in dc_spec.templates.iteritems():
+            for mt_name, mt_spec in six.iteritems(dc_spec.templates):
                 mt_ob = mt_spec.create(self.dmd, False, mt_name)
                 self.device_class_objects[dc_name]['templates'][mt_name] = mt_ob
 
@@ -187,9 +190,9 @@ class ClassObjectHelper(object):
     def find_pairs(self):
         '''return pairs of related objects'''
         pairs = []
-        for i_name, i_cfg in self.class_objects.iteritems():
+        for i_cfg in six.itervalues(self.class_objects):
             i_ob = i_cfg.get('ob')
-            for j_name, j_cfg in self.class_objects.iteritems():
+            for j_cfg in six.itervalues(self.class_objects):
                 j_ob = j_cfg.get('ob')
                 if self.has_relation(i_ob, j_ob):
                     pairs.append((i_ob, j_ob))

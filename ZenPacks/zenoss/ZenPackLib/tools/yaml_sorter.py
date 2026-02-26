@@ -164,7 +164,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2:
         scriptname = os.path.split(__file__)[-1]
-        print "Usage: ", scriptname, 'filename.yaml'
+        print("Usage: ", scriptname, 'filename.yaml')
         sys.exit(1)
 
     _filename = sys.argv[1]
@@ -184,7 +184,7 @@ if __name__ == '__main__':
             line = re.sub(color_rx, r"\g<pre>'\g<color>'", line)
         new_yaml += line + '\n'
 
-    print new_yaml
+    print(new_yaml)
 
 # -----------------------------------------------------------------------------------------
 #  Below this line is for testing the manual version only.
@@ -194,4 +194,4 @@ if __name__ == '__main__':
     reordered_data = reorder(ordered_data)
     new_yaml = ordered_dump(reordered_data, Dumper=MyDumper)
 
-    print new_yaml
+    print(new_yaml)

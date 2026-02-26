@@ -9,7 +9,7 @@
 ##############################################################################
 
 
-MYPATH=`python -c "import os.path; print os.path.realpath('$0')"`
+MYPATH=`python -c "import os.path; print(os.path.realpath('$0'))"`
 THISDIR=`dirname $MYPATH`
 PRGHOME=`dirname $THISDIR`
 PRGNAME=zenpacklib.py

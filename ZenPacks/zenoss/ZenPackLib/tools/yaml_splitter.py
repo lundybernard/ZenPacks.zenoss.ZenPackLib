@@ -60,7 +60,7 @@ class Splitter(object):
         names.insert(0, cls_type) # Prepend the cls_type to filename
         temp_file_name = '_'.join(names) + '.yaml'
 
-        print temp_file_name
+        print(temp_file_name)
         temp = os.path.join(self.output_dir, temp_file_name)
         if not self.writing:
             self.writing = True
@@ -70,7 +70,7 @@ class Splitter(object):
             self.tfile.close()
             self.tfile = open(temp, 'w')
         else:
-            print "Error: You should either be dormat at BOL or writing"
+            print("Error: You should either be dormat at BOL or writing")
             sys.exit()
 
     def split(self):
@@ -105,7 +105,7 @@ class Splitter(object):
 
                 elif zp_top:
                     temp_file_name = 'device.yaml'
-                    print temp_file_name
+                    print(temp_file_name)
                     temp = os.path.join(self.output_dir, temp_file_name)
                     self.tfile = open(temp, 'w')
                     self.tfile.write(zp_name) # Write the name: line
@@ -119,7 +119,7 @@ class Splitter(object):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Provide Filename"
+        print("Provide Filename")
     else:
         filename = sys.argv[1]
         splitter = Splitter(filename)

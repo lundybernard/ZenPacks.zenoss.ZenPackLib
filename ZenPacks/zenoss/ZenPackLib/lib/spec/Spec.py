@@ -12,6 +12,9 @@ import logging
 import itertools
 import operator
 from collections import OrderedDict
+
+import six
+
 from Acquisition import aq_base
 
 from Products import Zuul
@@ -218,7 +221,7 @@ class Spec(object):
             ...     'key2': {'number': 2, 'is_two': True},
             ... }
             >>> apply_defaults(mydict)
-            >>> print mydict
+            >>> print(mydict)
             {
                 'key1': {'number': 1, 'is_two': False},
                 'key2': {'number': 2, 'is_two': True},
@@ -227,7 +230,7 @@ class Spec(object):
         """
         if default_defaults:
             dictionary.setdefault('DEFAULTS', {})
-            for default_key, default_value in default_defaults.iteritems():
+            for default_key, default_value in six.iteritems(default_defaults):
                 dictionary['DEFAULTS'].setdefault(default_key, default_value)
 
         if 'DEFAULTS' in dictionary:
@@ -235,7 +238,7 @@ class Spec(object):
                 defaults = dictionary.get('DEFAULTS')
             else:
                 defaults = dictionary.pop('DEFAULTS')
-            for k, v in dictionary.iteritems():
+            for k, v in six.iteritems(dictionary):
                 dictionary[k] = dict(defaults, **v)
                 if 'extra_params' in dictionary[k].keys():
                     extra_params = defaults.get('extra_params', {})
@@ -259,7 +262,7 @@ class Spec(object):
                 self.apply_data_defaults(param_dict, leave_defaults=leave_defaults)
 
         specs = OrderedDict()
-        for k, v in param_dict.iteritems():
+        for k, v in six.iteritems(param_dict):
             args = fix_kwargs(v)
             args['zplog'] = zplog
             specs[k] = spec_type(self, k, **(args))
@@ -374,7 +377,7 @@ class Spec(object):
 
     def create_class(self, module, schema_module, classname, bases, attributes):
         """Create and return described class."""
-        if isinstance(module, basestring):
+        if isinstance(module, six.string_types):
             module = create_module(module)
 
         schema_class = self.create_schema_class(
@@ -384,7 +387,7 @@ class Spec(object):
 
     def create_schema_class(self, schema_module, classname, bases, attributes):
         """Create and return described schema class."""
-        if isinstance(schema_module, basestring):
+        if isinstance(schema_module, six.string_types):
             schema_module = create_module(schema_module)
 
         schema_class = getattr(schema_module, classname, None)
@@ -400,7 +403,7 @@ class Spec(object):
 
     def create_stub_class(self, module, schema_class, classname):
         """Create and return described stub class."""
-        if isinstance(module, basestring):
+        if isinstance(module, six.string_types):
             module = create_module(module)
 
         concrete_class = getattr(module, classname, None)
@@ -431,7 +434,7 @@ class Spec(object):
 
     def set_zproperties(self, ob):
         """Set zProperties on a given object according to the Spec"""
-        for zprop, value in getattr(self, 'zProperties', {}).iteritems():
+        for zprop, value in six.iteritems(getattr(self, 'zProperties', {})):
             if ob.getPropertyType(zprop) is None and ob.getProperty(zprop) is None:
                 self.LOG.error(
                     "Unable to set zProperty %s on %s (undefined zProperty)",

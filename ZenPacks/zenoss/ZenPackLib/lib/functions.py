@@ -9,10 +9,14 @@
 import os
 import importlib
 import collections
-import imp
 import sys
 import operator
 import re
+import types
+
+
+import six
+
 from Products.AdvancedQuery.AdvancedQuery import _BaseQuery as BaseQuery
 
 from Products.ZenModel.Device import Device as BaseDevice
@@ -163,7 +167,7 @@ def create_module(*args):
     try:
         return importlib.import_module(module_name)
     except ImportError as e:
-        module = imp.new_module(module_name)
+        module = types.ModuleType(module_name)
         module.__name__ = module_name
         sys.modules[module_name] = module
 
@@ -230,7 +234,7 @@ def relationships_from_yuml(yuml):
         r'\[(?P<right_classname>[^\]]+)\]'
         ).search
 
-    if isinstance(yuml, basestring):
+    if isinstance(yuml, six.string_types):
         yuml_lines = yuml.strip().splitlines()
 
     for line in yuml_lines:
@@ -317,8 +321,8 @@ def ucfirst(text):
 
 def update(d, u):
     """Return dict d updated with nested data from dict u."""
-    for k, v in u.iteritems():
-        if isinstance(v, collections.Mapping):
+    for k, v in six.iteritems(u):
+        if isinstance(v, collections.abc.Mapping):
             r = update(d.get(k, {}), v)
             d[k] = r
         else:

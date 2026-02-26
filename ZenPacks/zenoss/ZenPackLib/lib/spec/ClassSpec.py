@@ -11,6 +11,9 @@ import math
 import re
 import time
 import copy
+
+import six
+
 from zope.interface import classImplements
 from Products.Zuul.decorators import memoize
 from Products.Zuul.utils import ZuulMessageFactory as _t
@@ -282,7 +285,7 @@ class ClassSpec(Spec):
         # Monitoring Templates.
         if monitoring_templates is None:
             self.monitoring_templates = [self.label.replace(' ', '')]
-        elif isinstance(monitoring_templates, basestring):
+        elif isinstance(monitoring_templates, six.string_types):
             self.monitoring_templates = [monitoring_templates]
         else:
             self.monitoring_templates = list(monitoring_templates)
@@ -293,7 +296,7 @@ class ClassSpec(Spec):
         # Dynamicview Views and Group
         if dynamicview_views is None:
             self.dynamicview_views = ['service_view']
-        elif isinstance(dynamicview_views, basestring):
+        elif isinstance(dynamicview_views, six.string_types):
             self.dynamicview_views = [dynamicview_views]
         else:
             self.dynamicview_views = list(dynamicview_views)
@@ -398,7 +401,7 @@ class ClassSpec(Spec):
             as well as updating NEW_RELATIONS and NEW_COMPONENT_TYPES
         """
         if not self._plumbed:
-            for relname, relationship in self.relationships.iteritems():
+            for relname, relationship in six.iteritems(self.relationships):
                 # if no schema was ever allocated, remove this relationship from the class
                 # this happens if the ClassSpec sets display properties for a nonexistent relation
                 if not relationship.schema:
@@ -697,7 +700,7 @@ class ClassSpec(Spec):
                 global_catalogs.update(base._global_catalogs)
 
         # Add local properties and catalog indexes.
-        for name, spec in self.properties.iteritems():
+        for name, spec in six.iteritems(self.properties):
             if spec.api_backendtype == 'property':
                 # for normal properties (not methods or datapoints, apply default value)
                 attributes[name] = spec.default  # defaults to None
@@ -733,7 +736,7 @@ class ClassSpec(Spec):
                 properties.append(spec.ofs_dict)
 
             # Add class and instance catalogs.
-            for index_name, index_spec in spec.catalog_indexes.iteritems():
+            for index_name, index_spec in six.iteritems(spec.catalog_indexes):
                 index_scope = index_spec.get('scope', 'device')
                 index_type = index_spec.get('type', 'field')
 
@@ -750,7 +753,7 @@ class ClassSpec(Spec):
                         global_catalogs[self.name] = {index_name: index_type}
 
         # Add local relations.
-        for name, spec in self.relationships.iteritems():
+        for name, spec in six.iteritems(self.relationships):
             relations.append(spec.zenrelations_tuple)
 
             # Add getter and setter to allow modeling. Only for local
@@ -823,7 +826,7 @@ class ClassSpec(Spec):
 
         attributes = {}
 
-        for spec in self.inherited_properties().itervalues():
+        for spec in six.itervalues(self.inherited_properties()):
             attributes.update(spec.iinfo_schemas)
 
         for i, specs in enumerate(self.containing_spec_relations):
@@ -837,7 +840,7 @@ class ClassSpec(Spec):
                 group="Overview",
                 order=3 + i / 100.0)
 
-        for spec in self.inherited_relationships().itervalues():
+        for spec in six.itervalues(self.inherited_relationships()):
             attributes.update(spec.iinfo_schemas)
 
         return self.create_schema_class(
@@ -896,10 +899,10 @@ class ClassSpec(Spec):
                 attr = relname_from_classname(spec.name)
                 attributes[attr] = RelationshipInfoProperty(attr)
 
-        for spec in self.inherited_properties().itervalues():
+        for spec in six.itervalues(self.inherited_properties()):
             attributes.update(spec.info_properties)
 
-        for spec in self.inherited_relationships().itervalues():
+        for spec in six.itervalues(self.inherited_relationships()):
             attributes.update(spec.info_properties)
 
         attributes['dataPointsToFetch'] = self.datapoints_to_fetch
@@ -944,16 +947,16 @@ class ClassSpec(Spec):
         renderer = {}
 
         # Find renderers for our properties and relationships:
-        for propname, spec in self.properties.iteritems():
+        for propname, spec in six.iteritems(self.properties):
             renderer.setdefault(propname, spec.renderer)
-        for relname, spec in self.relationships.iteritems():
+        for relname, spec in six.iteritems(self.relationships):
             renderer.setdefault(relname, spec.renderer)
 
         # Find renderers for inherited properties and relationships
         for class_spec in self.base_class_specs(recursive=True):
-            for propname, spec in class_spec.properties.iteritems():
+            for propname, spec in six.iteritems(class_spec.properties):
                 renderer.setdefault(propname, spec.renderer)
-            for relname, spec in class_spec.relationships.iteritems():
+            for relname, spec in six.iteritems(class_spec.relationships):
                 renderer.setdefault(relname, spec.renderer)
 
         attributes['renderer'] = renderer
@@ -1261,12 +1264,12 @@ class ClassSpec(Spec):
         # grid panel.
         width = 0
 
-        for spec in self.inherited_properties().itervalues():
+        for spec in six.itervalues(self.inherited_properties()):
             fields.extend(spec.js_fields)
             ordered_columns.extend(spec.js_columns)
             width += spec.js_columns_width
 
-        for spec in self.inherited_relationships().itervalues():
+        for spec in six.itervalues(self.inherited_relationships()):
             fields.extend(spec.js_fields)
             ordered_columns.extend(spec.js_columns)
             width += spec.js_columns_width

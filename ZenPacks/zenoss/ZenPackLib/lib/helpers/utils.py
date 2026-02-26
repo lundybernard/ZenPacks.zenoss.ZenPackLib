@@ -8,7 +8,7 @@
 ##############################################################################
 import os
 import sys
-from collections import OrderedDict, Mapping
+from collections.abc import Mapping
 import yaml
 import time
 from .ZenPackLibLog import DEFAULTLOG
@@ -172,7 +172,7 @@ def optimize_yaml(orig_yaml):
         DEFAULTLOG.warn('OPTIMIZATION FAILED VERIFICATION!  Please review optimized YAML prior to use ')
         diff = compare_specparam_yaml_files(orig_yaml, optimized_yaml)
         if diff:
-            print diff
+            print(diff)
     return optimized_yaml
 
 def get_specparam_yaml_pair(orig_yaml, new_yaml):
@@ -325,11 +325,11 @@ def writeDataToFile(keywords=None):
     class foo(object):
         @writeDataToFile()
         def bar1(self, x, y):
-            print 'x: {}, y: {}'.format(x, y)
+            print('x: {}, y: {}'.format(x, y))
 
         @writeDataToFile(keywords=['my_password', 'my_datasource'])
         def bar2(self, x, y):
-            print 'testing'
+            print('testing')
 
     f = foo()
     f.bar1(1, 2)

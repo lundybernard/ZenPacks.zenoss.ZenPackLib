@@ -6,6 +6,9 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+import six
+
 from .Spec import Spec
 from .RRDDatapointSpec import RRDDatapointSpec
 from ..base.types import Severity
@@ -104,7 +107,7 @@ class RRDDatasourceSpec(Spec):
             datasource.commandTemplate = self.commandTemplate
 
         if self.extra_params:
-            for param, value in self.extra_params.iteritems():
+            for param, value in six.iteritems(self.extra_params):
                 if param in [x['id'] for x in datasource._properties]:
                     # handle an ui test error that expects the oid value to be a string
                     # this is to workaround a ui bug known in 4.5 and 5.0.3

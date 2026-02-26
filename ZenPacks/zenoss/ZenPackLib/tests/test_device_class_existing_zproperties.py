@@ -13,6 +13,8 @@
     Test that device classes can optionally have their zProperties reset (ZPS-810)
 """
 
+import six
+
 from ZenPacks.zenoss.ZenPackLib.tests import ZPLBaseTestCase
 
 YAML_DOC = """
@@ -40,7 +42,7 @@ class TestZPropertyReset(ZPLBaseTestCase):
         zenpack = cfg._zenpack_class(self.app)
 
         # create the device class
-        for dcname, dcspec in cfg.device_classes.items():
+        for dcspec in cfg.device_classes.values():
             dcspec.create_organizer(self.dmd)
             # zenpack.create_device_class(self.app, dcspec)
             # verify that it was created
@@ -48,7 +50,7 @@ class TestZPropertyReset(ZPLBaseTestCase):
             self.assertTrue(dc,
                 'Device class {} does not exist'.format(dcspec.path))
 
-        for dcname, dcspec in cfg.device_classes.iteritems():
+        for dcspec in six.itervalues(cfg.device_classes):
             if dcspec.reset:
                 dcspec.set_zproperties(self.dmd)
             self.assertFalse(getattr(dc, 'zSnmpMonitorIgnore'),

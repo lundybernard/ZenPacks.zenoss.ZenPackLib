@@ -10,6 +10,9 @@ import yaml
 import re
 from yaml.representer import SafeRepresenter
 from collections import OrderedDict
+
+import six
+
 from .ZenPackLibLog import DEFAULTLOG
 
 
@@ -116,7 +119,7 @@ class Dumper(yaml.Dumper):
 
         param_defs = cls.init_params
 
-        for p_name, p_data in param_defs.iteritems():
+        for p_name, p_data in six.iteritems(param_defs):
             # determine what type of object this is
             type_ = p_data.get('type')
 
@@ -176,7 +179,7 @@ class Dumper(yaml.Dumper):
 
             except yaml.representer.RepresenterError:
                 raise
-            except Exception, e:
+            except Exception as e:
                 raise yaml.representer.RepresenterError(
                     "Unable to serialize {} object (param {}, type {}, value {}): {}".format(
                     cls.__name__, p_name, type_, value, e))

@@ -8,6 +8,9 @@
 ##############################################################################
 from Products.ZenModel.GraphPoint import GraphPoint
 from collections import OrderedDict
+
+import six
+
 from Products.ZenModel.DataPointGraphPoint import DataPointGraphPoint
 from Products.ZenModel.ComplexGraphPoint import ComplexGraphPoint
 from Products.ZenModel.CommentGraphPoint import CommentGraphPoint
@@ -151,7 +154,7 @@ class GraphPointSpec(Spec):
             graphpoint.color = str(self.color)
 
         if self.extra_params:
-            for param, value in self.extra_params.iteritems():
+            for param, value in six.iteritems(self.extra_params):
                 if param in [x['id'] for x in graphpoint._properties]:
                     setattr(graphpoint, param, value)
                 else:

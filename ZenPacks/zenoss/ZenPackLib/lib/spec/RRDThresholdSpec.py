@@ -6,6 +6,9 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
+
+import six
+
 from .Spec import Spec
 from ..base.types import Severity
 
@@ -98,7 +101,7 @@ class RRDThresholdSpec(Spec):
         if self.enabled is not None:
             threshold.enabled = self.enabled
         if self.extra_params:
-            for param, value in self.extra_params.iteritems():
+            for param, value in six.iteritems(self.extra_params):
                 if param in [x['id'] for x in threshold._properties]:
                     setattr(threshold, param, value)
                 else:

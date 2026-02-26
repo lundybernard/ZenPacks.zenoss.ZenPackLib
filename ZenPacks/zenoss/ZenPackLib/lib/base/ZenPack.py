@@ -13,6 +13,8 @@ import difflib
 import time
 import sys
 
+import six
+
 from Acquisition import aq_base
 from Products.ZenModel.ZenPack import ZenPack as ZenPackBase
 from ..helpers.Dumper import Dumper
@@ -69,7 +71,7 @@ class ZenPack(ZenPackBase):
             self._buildDeviceRelations(app)
 
         # load monitoring templates
-        for dcname, dcspec in self.device_classes.iteritems():
+        for dcname, dcspec in six.iteritems(self.device_classes):
             dcspecparam = self._v_specparams.device_classes.get(dcname)
             deviceclass = dcspec.get_organizer(app.zport.dmd)
             
@@ -91,16 +93,16 @@ class ZenPack(ZenPackBase):
                 ):
                     getattr(deviceclass, pschema['id'])
 
-            for mtname, mtspec in dcspec.templates.iteritems():
+            for mtname, mtspec in six.iteritems(dcspec.templates):
                 mtspecparam = dcspecparam.templates.get(mtname)
                 self.update_object(app, deviceclass, 'rrdTemplates', mtname, mtspec, mtspecparam)
 
         # Load event classes
-        for ecname, ecspec in self.event_classes.iteritems():
+        for ecspec in six.itervalues(self.event_classes):
             ec_org = ecspec.create_organizer(app.zport.dmd)
 
         # Create Process Classes
-        for psname, psspec in self.process_class_organizers.iteritems():
+        for psspec in six.itervalues(self.process_class_organizers):
             ps_org = psspec.create_organizer(app.zport.dmd)
 
     def remove(self, app, leaveObjects=False):
@@ -116,7 +118,7 @@ class ZenPack(ZenPackBase):
             # Ideally, I would inspect self.packables() to find these
             # objects, but we do not have access to that relationship
             # at this point in the process.
-            for dcname, dcspec in self._v_specparams.device_classes.iteritems():
+            for dcname, dcspec in six.iteritems(self._v_specparams.device_classes):
                 deviceclass = dcspec.get_organizer(app.zport.dmd)
                 if not deviceclass:
                     self.LOG.warning(
@@ -126,7 +128,7 @@ class ZenPack(ZenPackBase):
                         dcname, self.id))
                     continue
 
-                for orig_mtname, orig_mtspec in dcspec.templates.iteritems():
+                for orig_mtname in six.iterkeys(dcspec.templates):
                     # attempt to find an existing template
                     template = self.get_object(deviceclass, 'rrdTemplates', orig_mtname)
                     # back it up if it exists
@@ -169,13 +171,13 @@ class ZenPack(ZenPackBase):
                 self.LOG.info('Removing {} relationships from existing devices.'.format(self.id))
                 self._buildDeviceRelations(app)
 
-            for dcname, dcspec in self.device_classes.iteritems():
+            for dcspec in six.itervalues(self.device_classes):
                 dcspec.remove_organizer(app.zport.dmd, self)
 
-            for ecname, ecspec in self.event_classes.iteritems():
+            for ecspec in six.itervalues(self.event_classes):
                 ecspec.remove_organizer(app.zport.dmd, self)
 
-            for pcname, pcspec in self.process_class_organizers.iteritems():
+            for pcspec in six.itervalues(self.process_class_organizers):
                 pcspec.remove_organizer_or_subs(
                     app.zport.dmd, 'process_classes', 'removeOSProcessClasses', self)
 
@@ -385,5 +387,5 @@ class ZenPack(ZenPackBase):
             else:
                 self.LOG.debug("Leaving {} unchanged".format(filename))
 
-        except Exception, e:
+        except Exception as e:
             self.LOG.error("Unable to postprocess {}: {}".format(filename, e))

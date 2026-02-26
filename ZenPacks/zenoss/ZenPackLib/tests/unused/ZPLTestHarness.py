@@ -533,7 +533,7 @@ class ZPLTestHarness(ZenScriptBase):
     def print_relations(self):
         ''''''
         for rspec in self.cfg.class_relationships:
-            print self.rel_spec_info(rspec)
+            print(self.rel_spec_info(rspec))
 
     def rel_cls_info(self, cls, relname, reverse=False):
         '''return string representing Class relation'''
@@ -583,24 +583,24 @@ class ZPLTestHarness(ZenScriptBase):
             self.relation_attributes(spec)
 
     def relation_attributes(self, spec):
-        print '#' * 80
-        print spec.name
-        print ''
+        print('#' * 80)
+        print(spec.name)
+        print('')
         self.print_attrs(spec.relationships)
 
     def class_attributes(self, spec):
-        print '#' * 80
-        print spec.name
-        print ''
+        print('#' * 80)
+        print(spec.name)
+        print('')
         self.print_attrs(spec)
 
     def print_attrs(self, data):
         for name, spec in data.items():
-            print '#### {}'.format(name)
+            print('#### {}'.format(name))
             for k, v in spec.__dict__.items():
                 if v is None: continue
-                print '  {}: {}'.format(k, v)
-            print ''
+                print('  {}: {}'.format(k, v))
+            print('')
 
     def list_all_paths(self):
         for ob in self.obs:
@@ -609,7 +609,7 @@ class ZPLTestHarness(ZenScriptBase):
             try:
                 self.list_paths(ob)
             except Exception as e:
-                print e
+                print(e)
                 continue
 
     def list_paths(self, component):
@@ -637,21 +637,21 @@ class ZPLTestHarness(ZenScriptBase):
             included_paths.add(component.meta_type + ":" + "/".join(path) + ":" + facet.meta_type)
             class_summary[component.meta_type].add(facet.meta_type)
 
-        print "Paths\n-----\n"
+        print("Paths\n-----\n")
         for path in sorted(all_paths):
             if path in included_paths:
                 if "/" not in path:
                     # normally all direct relationships are included
-                    print "DIRECT {}".format(path)
+                    print("DIRECT {}".format(path))
                 else:
                     # sometimes extra paths are pulled in due to extra_paths
                     # configuration.
-                    print "EXTRA {}".format(path)
+                    print("EXTRA {}".format(path))
             else:
-                print "EXCLUDE {}".format(path)
-        print "\nClass Summary\n-------------\n"
+                print("EXCLUDE {}".format(path))
+        print("\nClass Summary\n-------------\n")
         for source_class in sorted(class_summary.keys()):
-            print "{} is reachable from {}".format(source_class, ", ".join(sorted(class_summary[source_class])))
+            print("{} is reachable from {}".format(source_class, ", ".join(sorted(class_summary[source_class]))))
 
 
 class ZPLTestHarnessScriptBase(ZPLTestHarness, ZenScriptBase):

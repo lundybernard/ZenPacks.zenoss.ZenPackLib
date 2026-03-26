@@ -4,11 +4,14 @@ from yaml.composer import Composer, ComposerError
 from yaml.nodes import ScalarNode, SequenceNode, MappingNode
 from yaml.error import Mark
 
+_default_tag = _u("tag:yaml.org,2002:map")
+
+
 class ComposerFromDict(Composer):
     # composer for non-streaming loader that takes a dictionary
     # as the source of the nodes
 
-    def __init__(self, dataDict, tag=_u('tag:yaml.org,2002:map')):
+    def __init__(self, dataDict, tag=_default_tag):
         self.dataDict = dataDict
         self.tag = tag
         # need some kind of mark to keep some logging stuff from failing
@@ -26,10 +29,12 @@ class ComposerFromDict(Composer):
         # only if we haven't composed the node yet
 
         return self.dataDict is not None
-     
+
     def get_single_node(self):
         if not self.dataDict:
-            raise ComposerError(None, None, "source dict missing or empty", None)
+            raise ComposerError(
+                None, None, "source dict missing or empty", None
+            )
         # Compose the root node and everything below it
         node = self.compose_node(self.dataDict)
         node.tag = self.tag
@@ -38,7 +43,7 @@ class ComposerFromDict(Composer):
     get_node = get_single_node  # we will only ever have one node
 
     def compose_node(self, obj):
-        if isinstance(obj, (int, str, float, bool, type(None))): 
+        if isinstance(obj, (int, str, float, bool, type(None))):
             node = self.compose_scalar_node(obj)
         elif isinstance(obj, (list, tuple, set)):
             node = self.compose_sequence_node(obj)
@@ -50,33 +55,39 @@ class ComposerFromDict(Composer):
 
     def compose_scalar_node(self, obj):
         if isinstance(obj, (bool,)):
-            tag = _u('tag:yaml.org,2002:bool')
+            tag = _u("tag:yaml.org,2002:bool")
         elif isinstance(obj, string_types):
-            tag = _u('tag:yaml.org,2002:str')
+            tag = _u("tag:yaml.org,2002:str")
         elif isinstance(obj, (float,)):
-            tag = _u('tag:yaml.org,2002:float')
+            tag = _u("tag:yaml.org,2002:float")
         elif isinstance(obj, integer_types):
-            tag = _u('tag:yaml.org,2002:int')
+            tag = _u("tag:yaml.org,2002:int")
         elif isinstance(obj, (type(None),)):
-            tag = _u('tag:yaml.org,2002:null')
+            tag = _u("tag:yaml.org,2002:null")
         else:
-            tag = _u('tag:yaml.org,2002:str')
-        node = ScalarNode(tag, obj, start_mark=self.dummyMark, end_mark=self.dummyMark)
+            # `obj` is some other type, tag it as a `str` scalar.
+            tag = _u("tag:yaml.org,2002:str")
+        node = ScalarNode(
+            tag, obj, start_mark=self.dummyMark, end_mark=self.dummyMark
+        )
         return node
 
     def compose_sequence_node(self, obj):
-        tag = _u('tag:yaml.org,2002:seq')
-        node = SequenceNode(tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark)
+        tag = _u("tag:yaml.org,2002:seq")
+        node = SequenceNode(
+            tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark
+        )
         for value in obj:
             node.value.append(self.compose_node(value))
         return node
 
     def compose_mapping_node(self, obj):
-        tag = _u('tag:yaml.org,2002:map')
-        node = MappingNode(tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark)
+        tag = _u("tag:yaml.org,2002:map")
+        node = MappingNode(
+            tag, [], start_mark=self.dummyMark, end_mark=self.dummyMark
+        )
         for key, value in obj.items():
             item_key = self.compose_node(key)
             item_value = self.compose_node(value)
             node.value.append((item_key, item_value))
         return node
-

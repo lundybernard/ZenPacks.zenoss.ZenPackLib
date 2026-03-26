@@ -6,22 +6,29 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-import yaml
+
+import importlib
+import keyword
 import os
 import re
 import sys
-import importlib
-import keyword
+
 from collections import OrderedDict
+
+import yaml
+
+from yaml.constructor import ConstructorError
+
+from ..base.types import Severity
 from ..functions import (
     ZENOSS_KEYWORDS,
     JS_WORDS,
     relname_from_classname,
     find_keyword_cls,
 )
-from .ZenPackLibLog import ZPLOG, DEFAULTLOG
-from ..base.types import Severity, multiline
+
 from .composer import ComposerFromDict
+from .ZenPackLibLog import ZPLOG, DEFAULTLOG
 
 # Version dependent import
 try:
@@ -42,23 +49,19 @@ class OrderedLoader(YamlLoader):
 
     """
 
-    def __init__(self, *args, **kwargs):
-        YamlLoader.__init__(self, *args, **kwargs)
-
-        self.add_constructor(
-            "tag:yaml.org,2002:map", type(self).dict_constructor
-        )
-
-        self.add_constructor(
-            "tag:yaml.org,2002:omap", type(self).dict_constructor
-        )
-
-        self.add_constructor("!ZenPackSpec", type(self).dict_constructor)
-        self.add_path_resolver("!ZenPackSpec", [])
-
     def dict_constructor(self, node):
         """constructor for OrderedDict"""
         return OrderedDict(self.construct_pairs(node))
+
+
+OrderedLoader.add_constructor(
+    "tag:yaml.org,2002:map", OrderedLoader.dict_constructor
+)
+OrderedLoader.add_constructor(
+    "tag:yaml.org,2002:omap", OrderedLoader.dict_constructor
+)
+OrderedLoader.add_constructor("!ZenPackSpec", OrderedLoader.dict_constructor)
+OrderedLoader.add_path_resolver("!ZenPackSpec", [])
 
 
 class ZenPackSpecMixin(object):
@@ -86,7 +89,7 @@ class ZenPackSpecMixin(object):
 
         if not spec_class:
             self.yaml_error(
-                yaml.constructor.ConstructorError(
+                ConstructorError(
                     None,
                     None,
                     "Unrecognized Spec class {}".format(spectype),
@@ -97,7 +100,7 @@ class ZenPackSpecMixin(object):
 
         if not isinstance(node, yaml.MappingNode):
             self.yaml_error(
-                yaml.constructor.ConstructorError(
+                ConstructorError(
                     None,
                     None,
                     "expected a mapping node, but found {}".format(node.id),
@@ -133,31 +136,36 @@ class ZenPackSpecMixin(object):
         if issubclass(cls, RRDDatapointSpec) and isinstance(
             node, yaml.ScalarNode
         ):
-            # Special case- we allow for a shorthand in specifying datapoint specs.
-            return dict(shorthand=self.construct_scalar(node))
+            # Special case- we allow for a shorthand in specifying datapoint
+            # specs.
+            return {"shorthand": self.construct_scalar(node)}
 
-        # dictionary of class initialization parameters
-        param_defs = cls.init_params
-        # create new dictionary containing instance parameters
-        params = {}
         # raise an error if this won't parse correctly
         if not isinstance(node, yaml.MappingNode):
             self.yaml_error(
-                yaml.constructor.ConstructorError(
+                ConstructorError(
                     None,
                     None,
                     "expected a mapping node, but found {}".format(node.id),
                     node.start_mark,
                 )
             )
-        # note the YAML source lines
-        params["_source_location"] = "{}: {}-{}".format(
-            os.path.basename(node.start_mark.name),
-            node.start_mark.line + 1,
-            node.end_mark.line + 1,
-        )
 
-        # TODO: When deserializing, we should check if required properties are present.
+        # Create new dictionary containing instance parameters.
+        # Note the YAML source lines.
+        params = {
+            "_source_location": "{}: {}-{}".format(
+                os.path.basename(node.start_mark.name),
+                node.start_mark.line + 1,
+                node.end_mark.line + 1,
+            )
+        }
+
+        # TODO: When deserializing, we should check if required
+        # properties are present.
+
+        # dictionary of class initialization parameters
+        param_defs = cls.init_params
 
         extra_params = None
         # map attribute keys to yaml parameters if they differ
@@ -169,7 +177,7 @@ class ZenPackSpecMixin(object):
             if attributes.get("type") == "ExtraParams":
                 if extra_params:
                     self.yaml_error(
-                        yaml.constructor.ConstructorError(
+                        ConstructorError(
                             None,
                             None,
                             "Only one ExtraParams parameter may be specified.",
@@ -190,7 +198,8 @@ class ZenPackSpecMixin(object):
                 if extra_params:
                     # If an 'extra_params' parameter is defined for this spec,
                     # we take all unrecognized paramters and stuff them into
-                    # a single parameter, which is a dictonary of "extra" parameters.
+                    # a single parameter, which is a dictonary of "extra"
+                    # parameters.
                     #
                     # Note that the values of these extra parameters need to be
                     # scalars, not nested maps or something like that.
@@ -200,12 +209,11 @@ class ZenPackSpecMixin(object):
                     continue
                 else:
                     self.yaml_error(
-                        yaml.constructor.ConstructorError(
+                        ConstructorError(
                             None,
                             None,
-                            "Unrecognized parameter '{}' found while processing {}".format(
-                                yaml_key, cls.__name__
-                            ),
+                            "Unrecognized parameter '{}' found while "
+                            "processing {}".format(yaml_key, cls.__name__),
                             key_node.start_mark,
                         )
                     )
@@ -214,9 +222,7 @@ class ZenPackSpecMixin(object):
             key = param_name_map.get(yaml_key)
             if not key:
                 self.LOG.error(
-                    "No key found for {} in {}".format(
-                        yaml_key, param_name_map
-                    )
+                    "No key found for %s in %s", yaml_key, param_name_map
                 )
 
             # default construction
@@ -224,9 +230,11 @@ class ZenPackSpecMixin(object):
                 value_node, yaml.MappingNode
             ):
                 self.LOG.debug(
-                    "Obsolete tag '!ZenPackSpec' found, changing to 'tag:yaml.org,2002:map'."
+                    "Obsolete tag '!ZenPackSpec' found, changing to "
+                    "'tag:yaml.org,2002:map'."
                 )
                 value_node.tag = "tag:yaml.org,2002:map"
+
             yaml_value = self.construct_object(value_node)
 
             # expected type should fall back to string if not given
@@ -238,24 +246,24 @@ class ZenPackSpecMixin(object):
                 if expected_type == "str" and not isinstance(yaml_value, str):
                     value_node.value = str(value_node.value)
                     yaml_value = self.construct_python_str(value_node)
-                elif expected_type == "float" and not isinstance(
-                    yaml_value, float
-                ):
-                    yaml_value = self.construct_yaml_float(value_node)
+                elif expected_type == "float":
+                    if isinstance(yaml_value, int):
+                        yaml_value = value_node.value = float(value_node.value)
+                    elif not isinstance(yaml_value, float):
+                        yaml_value = self.construct_yaml_float(value_node)
                 elif expected_type.startswith("dict(SpecsParameter("):
                     m = re.match(
-                        "^dict\(SpecsParameter\((.*)\)\)$", expected_type
+                        r"^dict\(SpecsParameter\((.*)\)\)$", expected_type
                     )
                     if m:
                         spectype = m.group(1)
                         if not isinstance(node, yaml.MappingNode):
                             self.yaml_error(
-                                yaml.constructor.ConstructorError(
+                                ConstructorError(
                                     None,
                                     None,
-                                    "expected a mapping node, but found {}".format(
-                                        node.id
-                                    ),
+                                    "expected a mapping node, "
+                                    "but found {}".format(node.id),
                                     node.start_mark,
                                 )
                             )
@@ -269,9 +277,8 @@ class ZenPackSpecMixin(object):
                         yaml_value = specs
                     else:
                         raise Exception(
-                            "Unable to determine specs parameter type in '{}'".format(
-                                expected_type
-                            )
+                            "Unable to determine specs parameter "
+                            "type in '{}'".format(expected_type)
                         )
 
                 elif expected_type == "list(class)":
@@ -294,7 +301,7 @@ class ZenPackSpecMixin(object):
 
                 elif expected_type == "list(ExtraPath)":
                     if not isinstance(value_node, yaml.SequenceNode):
-                        raise yaml.constructor.ConstructorError(
+                        raise ConstructorError(
                             None,
                             None,
                             "expected a sequence node, but found {}".format(
@@ -323,8 +330,8 @@ class ZenPackSpecMixin(object):
                 elif expected_type == "multiline":
                     yaml_value = self.construct_python_str(value_node)
 
-                elif re.match("^SpecsParameter\((.*)\)$", expected_type):
-                    m = re.match("^SpecsParameter\((.*)\)$", expected_type)
+                elif re.match(r"^SpecsParameter\((.*)\)$", expected_type):
+                    m = re.match(r"^SpecsParameter\((.*)\)$", expected_type)
                     if m:
                         spectype = m.group(1)
                         yaml_value = self.construct_specsparameters(
@@ -343,24 +350,23 @@ class ZenPackSpecMixin(object):
                             "list(str)",
                             "ZPropertyDefaultValue",
                         ]:
-                            self.LOG.warn(
-                                "Possible type mismatch for {}: {}: expected: {} got: {}".format(
-                                    key,
-                                    yaml_value,
-                                    expected_type,
-                                    type(yaml_value).__name__,
-                                )
+                            self.LOG.warning(
+                                "Possible type mismatch for %s: %s: "
+                                "expected: %s got: %s",
+                                key,
+                                yaml_value,
+                                expected_type,
+                                type(yaml_value).__name__,
                             )
-            except yaml.constructor.ConstructorError as e:
+            except ConstructorError as e:
                 self.yaml_error(e)
             except Exception as e:
                 self.yaml_error(
-                    yaml.constructor.ConstructorError(
+                    ConstructorError(
                         None,
                         None,
-                        "Unable to deserialize {} object (param {}): {}".format(
-                            cls.__name__, key_node.value, e
-                        ),
+                        "Unable to deserialize {} object (param {}): "
+                        "{}".format(cls.__name__, key_node.value, e),
                         value_node.start_mark,
                     ),
                     exc_info=sys.exc_info(),
@@ -391,9 +397,7 @@ class ZenPackSpecMixin(object):
             return ZenPackSpec(name, **params)
         except Exception as e:
             if yaml_errored and not fatal:
-                self.LOG.error(
-                    "(possibly because of earlier errors) {}".format(e)
-                )
+                self.LOG.error("(possibly because of earlier errors) %s", e)
             else:
                 raise
 
@@ -409,13 +413,13 @@ class ZenPackSpecMixin(object):
             return object
 
         if "." not in classstr:
-            # TODO: Support non qualfied class names, searching zenpack, zenpacklib,
-            # and ZenModel namespaces
+            # TODO: Support non qualfied class names, searching zenpack,
+            # zenpacklib, and ZenModel namespaces
 
             # An unqualified class name is assumed to be referring to one in
-            # the classes defined in this ZenPackSpec.   We can't validate this,
-            # or return a class object for it, if this is the case.  So we
-            # return no class object, and the caller will assume that it
+            # the classes defined in this ZenPackSpec.   We can't validate
+            # this, or return a class object for it, if this is the case.
+            # So we return no class object, and the caller will assume that
             # it refers to a class being defined.
             return None
 
@@ -434,26 +438,33 @@ class ZenPackSpecMixin(object):
 
         return class_
 
+    _schema_search = re.compile(
+        r"^\s*(?P<left>\S+)"
+        r"\s+(?P<cardinality>1:1|1:M|1:MC|M:M)"
+        r"\s+(?P<right>\S+)\s*$",
+    ).search
+
+    _class_rel_search = re.compile(
+        r"(\((?P<pre_relname>[^\)\s]+)\))?"
+        r"(?P<class>[^\(\s]+)"
+        r"(\((?P<post_relname>[^\)\s]+)\))?"
+    ).search
+
+    _reltypes = {
+        "1:1": ("ToOne", "ToOne"),
+        "1:M": ("ToMany", "ToOne"),
+        "1:MC": ("ToManyCont", "ToOne"),
+        "M:M": ("ToMany", "ToMany"),
+    }
+
     def str_to_relschemaspec(self, schemastr):
-        schema_pattern = re.compile(
-            r"^\s*(?P<left>\S+)"
-            r"\s+(?P<cardinality>1:1|1:M|1:MC|M:M)"
-            r"\s+(?P<right>\S+)\s*$",
-        )
-
-        class_rel_pattern = re.compile(
-            r"(\((?P<pre_relname>[^\)\s]+)\))?"
-            r"(?P<class>[^\(\s]+)"
-            r"(\((?P<post_relname>[^\)\s]+)\))?"
-        )
-
-        m = schema_pattern.search(schemastr)
+        m = self._schema_search(schemastr)
         if not m:
             raise ValueError(
                 "RelationshipSchemaSpec '{}' is not valid".format(schemastr)
             )
 
-        ml = class_rel_pattern.search(m.group("left"))
+        ml = self._class_rel_search(m.group("left"))
         if not ml:
             raise ValueError(
                 "RelationshipSchemaSpec '{}' left side is not valid".format(
@@ -461,7 +472,7 @@ class ZenPackSpecMixin(object):
                 )
             )
 
-        mr = class_rel_pattern.search(m.group("right"))
+        mr = self._class_rel_search(m.group("right"))
         if not mr:
             raise ValueError(
                 "RelationshipSchemaSpec '{}' right side is not valid".format(
@@ -469,17 +480,10 @@ class ZenPackSpecMixin(object):
                 )
             )
 
-        reltypes = {
-            "1:1": ("ToOne", "ToOne"),
-            "1:M": ("ToMany", "ToOne"),
-            "1:MC": ("ToManyCont", "ToOne"),
-            "M:M": ("ToMany", "ToMany"),
-        }
-
         left_class = ml.group("class")
         right_class = mr.group("class")
-        left_type = reltypes.get(m.group("cardinality"))[0]
-        right_type = reltypes.get(m.group("cardinality"))[1]
+        left_type = self._reltypes.get(m.group("cardinality"))[0]
+        right_type = self._reltypes.get(m.group("cardinality"))[1]
 
         left_relname = ml.group("pre_relname") or ml.group("post_relname")
         if left_relname is None:
@@ -493,14 +497,29 @@ class ZenPackSpecMixin(object):
                 left_class, plural=right_type != "ToOne"
             )
 
-        return dict(
-            left_class=left_class,
-            left_relname=left_relname,
-            left_type=left_type,
-            right_type=right_type,
-            right_class=right_class,
-            right_relname=right_relname,
-        )
+        return {
+            "left_class": left_class,
+            "left_relname": left_relname,
+            "left_type": left_type,
+            "right_type": right_type,
+            "right_class": right_class,
+            "right_relname": right_relname,
+        }
+
+    _severity_values_map = {
+        "crit": 5,
+        "critical": 5,
+        "err": 4,
+        "error": 4,
+        "warn": 3,
+        "warning": 3,
+        "info": 2,
+        "information": 2,
+        "informational": 2,
+        "debug": 1,
+        "debugging": 1,
+        "clear": 0,
+    }
 
     def str_to_severity(self, value):
         """
@@ -509,20 +528,7 @@ class ZenPackSpecMixin(object):
         try:
             severity = int(value)
         except (TypeError, ValueError):
-            severity = {
-                "crit": 5,
-                "critical": 5,
-                "err": 4,
-                "error": 4,
-                "warn": 3,
-                "warning": 3,
-                "info": 2,
-                "information": 2,
-                "informational": 2,
-                "debug": 1,
-                "debugging": 1,
-                "clear": 0,
-            }.get(value.lower())
+            severity = self._severity_values_map.get(value.lower())
 
         if severity is None:
             raise ValueError(
@@ -555,19 +561,21 @@ class ZenPackSpecMixin(object):
     def yaml_warning(self, e):
         # Given a MarkedYAMLError exception, either log or raise
         # the error, depending on the 'fatal' argument.
-        self.LOG.warn(self.format_message(e))
+        self.LOG.warning(self.format_message(e))
 
     def yaml_error(self, e, exc_info=None):
         # Given a MarkedYAMLError exception, either log or raise
         # the error, depending on the 'fatal' argument.
         fatal = not getattr(self, "warnings", False)
-        setattr(self, "yaml_errored", True)
+        self.yaml_errored = True
         if exc_info:
             # When we're given the original exception (which was wrapped in
             # a MarkedYAMLError), we can provide more context for debugging.
-            from traceback import format_exc
+            from traceback import format_exception
 
-            e.note = "\nOriginal exception:\n{}".format(format_exc(exc_info))
+            e.note = "\nOriginal exception:\n{}".format(
+                "".join(format_exception(*exc_info))
+            )
         if fatal:
             raise e
         self.LOG.error(self.format_message(e))
@@ -579,7 +587,7 @@ class ZenPackSpecMixin(object):
         # never use a python reserved word
         if key in keyword.kwlist:
             self.yaml_error(
-                yaml.constructor.ConstructorError(
+                ConstructorError(
                     None,
                     None,
                     "Found reserved keyword '{}' while processing {}".format(
@@ -600,7 +608,7 @@ class ZenPackSpecMixin(object):
             ]:
                 klasses = ", ".join(find_keyword_cls(key))
                 self.yaml_warning(
-                    yaml.constructor.ConstructorError(
+                    ConstructorError(
                         None,
                         None,
                         "Found reserved Zenoss keyword '{}' from {}".format(
@@ -637,11 +645,14 @@ class ZenPackSpecLoader(ZenPackSpecMixin, OrderedLoader):
     def __init__(self, *args, **kwargs):
         OrderedLoader.__init__(self, *args, **kwargs)
 
-        self.add_constructor(
-            "tag:yaml.org,2002:seq", type(self).construct_sequence
-        )
 
-        self.add_constructor("!ZenPackSpec", type(self).construct_zenpackspec)
+ZenPackSpecLoader.add_constructor(
+    "tag:yaml.org,2002:seq", ZenPackSpecLoader.construct_sequence
+)
+
+ZenPackSpecLoader.add_constructor(
+    "!ZenPackSpec", ZenPackSpecLoader.construct_zenpackspec
+)
 
 
 class FromDictLoader(ComposerFromDict, YamlConstructor):
@@ -659,21 +670,34 @@ class ZenPackSpecFromDictLoader(ZenPackSpecMixin, FromDictLoader):
         kwargs["tag"] = "!ZenPackSpec"
         FromDictLoader.__init__(self, *args, **kwargs)
 
-        self.add_constructor(
-            "tag:yaml.org,2002:seq", type(self).construct_sequence
-        )
-
-        self.add_constructor("!ZenPackSpec", type(self).construct_zenpackspec)
-
-        self.add_constructor(
-            "tag:yaml.org,2002:bool", type(self).construct_bool
-        )
-
     def construct_bool(self, node):
         return node.value
 
-    def construct_document(self, node):
-        return self.construct_object(node, deep=True)
+    def construct_existing(self, node):
+        return node.value
+
+    def construct_object(self, node, deep=True):
+        return FromDictLoader.construct_object(self, node, deep=deep)
+
+    # def construct_document(self, node):
+    #     return self.construct_object(node, deep=True)
+
+
+ZenPackSpecFromDictLoader.add_constructor(
+    "tag:yaml.org,2002:seq", ZenPackSpecFromDictLoader.construct_sequence
+)
+ZenPackSpecFromDictLoader.add_constructor(
+    "!ZenPackSpec", ZenPackSpecFromDictLoader.construct_zenpackspec
+)
+ZenPackSpecFromDictLoader.add_constructor(
+    "tag:yaml.org,2002:bool", ZenPackSpecFromDictLoader.construct_bool
+)
+ZenPackSpecFromDictLoader.add_constructor(
+    "tag:yaml.org,2002:int", ZenPackSpecFromDictLoader.construct_existing
+)
+ZenPackSpecFromDictLoader.add_constructor(
+    "tag:yaml.org,2002:float", ZenPackSpecFromDictLoader.construct_existing
+)
 
 
 class WarningLoader(ZenPackSpecLoader):

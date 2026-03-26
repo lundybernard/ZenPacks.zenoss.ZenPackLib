@@ -6,23 +6,26 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-import os
-import importlib
-import collections
-import sys
-import operator
-import re
-import types
 
+import collections
+import importlib
+import operator
+import os
+import re
+import sys
+import types
 
 import six
 
 from Products.AdvancedQuery.AdvancedQuery import _BaseQuery as BaseQuery
 
 from Products.ZenModel.Device import Device as BaseDevice
-from Products.Zuul.infos.device import DeviceInfo as BaseDeviceInfo
-from Products.ZenModel.DeviceComponent import DeviceComponent as BaseDeviceComponent
+from Products.ZenModel.DeviceComponent import (
+    DeviceComponent as BaseDeviceComponent,
+)
 from Products.Zuul.infos.component import ComponentInfo as BaseComponentInfo
+from Products.Zuul.infos.device import DeviceInfo as BaseDeviceInfo
+
 from .helpers.ZenPackLibLog import DEFAULTLOG
 
 
@@ -40,17 +43,30 @@ def getZenossKeywords(klasses):
                 kwset = kwset.union([attribute])
     return kwset
 
-ZENOSS_KEYWORDS = getZenossKeywords([BaseDevice,
-                                     BaseDeviceInfo,
-                                     BaseDeviceComponent,
-                                     BaseComponentInfo])
 
-JS_WORDS = set(['uuid', 'uid', 'meta_type', 'monitor', 'severity', 'monitored', 'locking'])
+ZENOSS_KEYWORDS = getZenossKeywords(
+    [BaseDevice, BaseDeviceInfo, BaseDeviceComponent, BaseComponentInfo]
+)
+
+JS_WORDS = {
+    "uuid",
+    "uid",
+    "meta_type",
+    "monitor",
+    "severity",
+    "monitored",
+    "locking",
+}
 
 
 def find_keyword_cls(keyword):
     names = []
-    for k in [BaseDevice, BaseDeviceComponent, BaseDeviceInfo, BaseComponentInfo]:
+    for k in [
+        BaseDevice,
+        BaseDeviceComponent,
+        BaseDeviceInfo,
+        BaseComponentInfo,
+    ]:
         if keyword in dir(k):
             names.append(k.__name__)
     return names
@@ -59,32 +75,35 @@ def find_keyword_cls(keyword):
 def relname_from_classname(classname, plural=False):
     """Return relationship name given classname and plural flag."""
 
-    if '.' in classname:
-        classname = classname.replace('.', '_').lower()
+    if "." in classname:
+        classname = classname.replace(".", "_").lower()
 
     relname = list(classname)
-    for i, c in enumerate(classname):
+    for i, _ in enumerate(classname):
         if relname[i].isupper():
             relname[i] = relname[i].lower()
         else:
             break
 
-    return ''.join((''.join(relname), 's' if plural else ''))
+    return "".join(("".join(relname), "s" if plural else ""))
 
 
 def get_zenpack_path(zenpack_name):
     """Return filesystem path for given ZenPack."""
     zenpack_module = importlib.import_module(zenpack_name)
-    if hasattr(zenpack_module, '__file__'):
+    if hasattr(zenpack_module, "__file__"):
         return os.path.dirname(zenpack_module.__file__)
     else:
         return None
 
 
 def ordered_values(iterable):
-    """Return ordered list of values for iterable of OrderAndValue instances."""
+    """
+    Return ordered list of values for iterable of OrderAndValue instances.
+    """
     return [
-        x.value for x in sorted(iterable, key=operator.attrgetter('order'))]
+        x.value for x in sorted(iterable, key=operator.attrgetter("order"))
+    ]
 
 
 def pluralize(text):
@@ -93,18 +112,18 @@ def pluralize(text):
     Totally naive implementation currently. Could use a third party
     library if we knew it would be installed.
     """
-    if text.endswith('s'):
-        return '{}es'.format(text)
+    if text.endswith("s"):
+        return "{}es".format(text)
 
-    return '{}s'.format(text)
+    return "{}s".format(text)
 
 
 def fix_kwargs(kwargs):
     """Return kwargs with reserved words suffixed with _."""
     new_kwargs = {}
     for k, v in kwargs.items():
-        if k in ('class', 'type'):
-            new_kwargs['{}_'.format(k)] = v
+        if k in ("class", "type"):
+            new_kwargs["{}_".format(k)] = v
         else:
             new_kwargs[k] = v
 
@@ -114,9 +133,14 @@ def fix_kwargs(kwargs):
 def catalog_search(scope, name, *args, **kwargs):
     """Return iterable of matching brains in named catalog."""
 
-    catalog = getattr(scope, '{}Search'.format(name), None)
+    catalog = getattr(scope, "{}Search".format(name), None)
     if not catalog:
-        DEFAULTLOG.debug("Catalog {}Search not found at {}.  It should be created when the first included component is indexed".format(name, scope))
+        DEFAULTLOG.debug(
+            "Catalog %sSearch not found at %s.  It should be created when "
+            "the first included component is indexed",
+            name,
+            scope,
+        )
         return []
 
     if args:
@@ -127,8 +151,8 @@ def catalog_search(scope, name, *args, **kwargs):
         else:
             raise TypeError(
                 "search() argument must be a BaseQuery or a dict, "
-                "not {0!r}"
-                .format(type(args[0]).__name__))
+                "not {0!r}".format(type(args[0]).__name__)
+            )
 
     return catalog(**kwargs)
 
@@ -154,10 +178,11 @@ def get_symbol_name(*args):
     be returned.
 
     """
-    return '.'.join(x for x in args if x)
+    return ".".join(x for x in args if x)
 
 
 _match_exc_message = re.compile(r"No module named '?(\w[\w.]*)'?").match
+
 
 def create_module(*args):
     """Import and return module given path args.
@@ -173,22 +198,25 @@ def create_module(*args):
         module.__name__ = module_name
         sys.modules[module_name] = module
 
-        module_parts = module_name.split('.')
+        module_parts = module_name.split(".")
 
         if len(module_parts) > 1:
             parent_module_name = get_symbol_name(*module_parts[:-1])
             parent_module = create_module(parent_module_name)
             setattr(parent_module, module_parts[-1], module)
 
-        to_find = _match_exc_message(str(e)).groups()[0]
-        if to_find not in module_name:
-            DEFAULTLOG.error('create_module failed loading {} ({})'.format(module_name, e))
+        matched = _match_exc_message(str(e))
+        badmodpath = matched.groups()[0] if matched else ""
+        if badmodpath not in module_name:
+            DEFAULTLOG.error(
+                "create_module failed loading {} ({})".format(module_name, e)
+            )
 
     return importlib.import_module(module_name)
 
 
 def relationships_from_yuml(yuml):
-    '''This function is used by pre-YAML relation definitions'''
+    """This function is used by pre-YAML relation definitions"""
     """Return schema relationships definition given yuml text.
 
     The yuml text required is a subset of what is supported by yUML
@@ -222,19 +250,19 @@ def relationships_from_yuml(yuml):
 
     """
     classes = []
-    match_comment = re.compile(r'^//').search
+    match_comment = re.compile(r"^//").search
 
     match_line = re.compile(
-        r'\[(?P<left_classname>[^\]]+)\]'
-        r'(?P<left_cardinality>[\.\*\+\d]*)'
-        r'(?P<left_relname>[a-zA-Z_]*)'
-        r'\s*?'
-        r'(?P<relationship_separator>[\-\.]+)'
-        r'(?P<right_relname>[a-zA-Z_]*)'
-        r'\s*?'
-        r'(?P<right_cardinality>[\.\*\+\d]*)'
-        r'\[(?P<right_classname>[^\]]+)\]'
-        ).search
+        r"\[(?P<left_classname>[^\]]+)\]"
+        r"(?P<left_cardinality>[\.\*\+\d]*)"
+        r"(?P<left_relname>[a-zA-Z_]*)"
+        r"\s*?"
+        r"(?P<relationship_separator>[\-\.]+)"
+        r"(?P<right_relname>[a-zA-Z_]*)"
+        r"\s*?"
+        r"(?P<right_cardinality>[\.\*\+\d]*)"
+        r"\[(?P<right_classname>[^\]]+)\]"
+    ).search
 
     if isinstance(yuml, six.string_types):
         yuml_lines = yuml.strip().splitlines()
@@ -250,60 +278,70 @@ def relationships_from_yuml(yuml):
 
         match = match_line(line)
         if not match:
-            raise ValueError("parse error in relationships_from_yuml at {}".format(line))
+            raise ValueError(
+                "parse error in relationships_from_yuml at {}".format(line)
+            )
 
-        left_class = match.group('left_classname')
-        right_class = match.group('right_classname')
-        left_relname = match.group('left_relname')
-        left_cardinality = match.group('left_cardinality')
-        right_relname = match.group('right_relname')
-        right_cardinality = match.group('right_cardinality')
+        left_class = match.group("left_classname")
+        right_class = match.group("right_classname")
+        left_relname = match.group("left_relname")
+        left_cardinality = match.group("left_cardinality")
+        right_relname = match.group("right_relname")
+        right_cardinality = match.group("right_cardinality")
 
-        if '++' in left_cardinality:
-            left_type = 'ToManyCont'
-        elif '*' in right_cardinality:
-            left_type = 'ToMany'
+        if "++" in left_cardinality:
+            left_type = "ToManyCont"
+        elif "*" in right_cardinality:
+            left_type = "ToMany"
         else:
-            left_type = 'ToOne'
+            left_type = "ToOne"
 
-        if '++' in right_cardinality:
-            right_type = 'ToManyCont'
-        elif '*' in left_cardinality:
-            right_type = 'ToMany'
+        if "++" in right_cardinality:
+            right_type = "ToManyCont"
+        elif "*" in left_cardinality:
+            right_type = "ToMany"
         else:
-            right_type = 'ToOne'
+            right_type = "ToOne"
 
         if not left_relname:
             left_relname = relname_from_classname(
-                right_class, plural=left_type != 'ToOne')
+                right_class, plural=left_type != "ToOne"
+            )
 
         if not right_relname:
             right_relname = relname_from_classname(
-                left_class, plural=right_type != 'ToOne')
+                left_class, plural=right_type != "ToOne"
+            )
 
         from spec.RelationshipSchemaSpec import RelationshipSchemaSpec
+
         # Order them correctly (larger one on the right)
         if RelationshipSchemaSpec.valid_orientation(left_type, right_type):
-            classes.append(dict(
-                left_class=left_class,
-                left_relname=left_relname,
-                left_type=left_type,
-                right_type=right_type,
-                right_class=right_class,
-                right_relname=right_relname
-            ))
+            classes.append(
+                {
+                    "left_class": left_class,
+                    "left_relname": left_relname,
+                    "left_type": left_type,
+                    "right_type": right_type,
+                    "right_class": right_class,
+                    "right_relname": right_relname,
+                }
+            )
         else:
             # flip them around
-            classes.append(dict(
-                left_class=right_class,
-                left_relname=right_relname,
-                left_type=right_type,
-                right_type=left_type,
-                right_class=left_class,
-                right_relname=left_relname
-            ))
+            classes.append(
+                {
+                    "left_class": right_class,
+                    "left_relname": right_relname,
+                    "left_type": right_type,
+                    "right_type": left_type,
+                    "right_class": left_class,
+                    "right_relname": left_relname,
+                }
+            )
 
     return classes
+
 
 # Public Functions #########################################################
 
@@ -330,4 +368,3 @@ def update(d, u):
         else:
             d[k] = u[k]
     return d
-

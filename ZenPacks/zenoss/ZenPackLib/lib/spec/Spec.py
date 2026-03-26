@@ -340,14 +340,14 @@ class Spec(object):
         for p in self.init_params:
             default_p = '_{}_defaultvalue'.format(p)
             val = getattr(self, p, getattr(self, default_p, None))
-            md5.update(hash(val))
+            md5.update(str(val).encode())
 
-        return md5.digest()
+        return hash(md5.digest())
 
     def __eq__(self, other, ignore_params=None):
         if ignore_params is None:
             ignore_params = []
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
 
         params = self.init_params

@@ -6,39 +6,42 @@
 # License.zenoss under the directory where your Zenoss product is installed.
 #
 ##############################################################################
-import os
+
 import collections
 import importlib
 import inspect
 import operator
+import os
 import types
 
 import six
 
 from Zope2.App import zcml
-from Products.ZenUtils.Utils import monkeypatch
-from Products.Zuul.routers.device import DeviceRouter
+from zope.browser.interfaces import IBrowserView
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
 from zope.viewlet.interfaces import IViewlet
-from zope.browser.interfaces import IBrowserView
-from Products.ZenUI3.browser.interfaces import IMainSnippetManager
+
 from Products.ZenModel.interfaces import IExpandedLinkProvider
+from Products.ZenUI3.browser.interfaces import IMainSnippetManager
 from Products.ZenUI3.utils.javascript import JavaScriptSnippet
-from ..utils import dynamicview_installed
-from ..functions import get_symbol_name, get_zenpack_path
-from ..resources.templates import JS_LINK_FROM_GRID
-from ..gsm import get_gsm
+from Products.ZenUtils.Utils import monkeypatch
+from Products.Zuul.routers.device import DeviceRouter
+
 from ..base.Device import Device
-from ..base.ZenPack import ZenPack
-from .Spec import Spec
+from ..functions import get_symbol_name, get_zenpack_path
+from ..gsm import get_gsm
+from ..links import DeviceLinkProvider
+from ..resources.templates import JS_LINK_FROM_GRID
+from ..utils import dynamicview_installed
+
 from .ClassSpec import ClassSpec
 from .DeviceClassSpec import DeviceClassSpec
-from .RelationshipSchemaSpec import RelationshipSchemaSpec
-from .ZPropertySpec import ZPropertySpec
 from .EventClassSpec import EventClassSpec
-from .ProcessClassOrganizerSpec import ProcessClassOrganizerSpec
 from .LinkProviderSpec import LinkProviderSpec
-from ..links import DeviceLinkProvider
+from .ProcessClassOrganizerSpec import ProcessClassOrganizerSpec
+from .RelationshipSchemaSpec import RelationshipSchemaSpec
+from .Spec import Spec
+from .ZPropertySpec import ZPropertySpec
 
 DYNAMICVIEW_INSTALLED = dynamicview_installed()
 
@@ -46,7 +49,6 @@ GSM = get_gsm()
 
 
 class ZenPackSpec(Spec):
-
     """Representation of a ZenPack's desired configuration.
 
     Intended to be used to build a ZenPack declaratively as in the
@@ -101,43 +103,45 @@ class ZenPackSpec(Spec):
     imported_classes = {}
 
     def __init__(
-            self,
-            name,
-            zProperties=None,
-            classes=None,
-            class_relationships=None,
-            device_classes=None,
-            event_classes=None,
-            process_class_organizers=None,
-            link_providers=None,
-            _source_location=None,
-            zplog=None):
+        self,
+        name,
+        zProperties=None,
+        classes=None,
+        class_relationships=None,
+        device_classes=None,
+        event_classes=None,
+        process_class_organizers=None,
+        link_providers=None,
+        _source_location=None,
+        zplog=None,
+    ):
         """
-            Create a ZenPack Specification
+        Create a ZenPack Specification
 
-            :param name: Full name of the ZenPack (ZenPacks.zenoss.MyZenPack)
-            :type name: str
-            :param zProperties: zProperty Specs
-            :type zProperties: SpecsParameter(ZPropertySpec)
-            :param classes: Class Specs
-            :type classes: SpecsParameter(ClassSpec)
-            :param class_relationships: Class Relationship Specs
-            :type class_relationships: list(RelationshipSchemaSpec)
-            :yaml_block_style class_relationships: True
-            :param device_classes: DeviceClass Specs
-            :type device_classes: SpecsParameter(DeviceClassSpec)
-            :param event_classes: EventClass Specs
-            :type event_classes: SpecsParameter(EventClassSpec)
-            :param process_class_organizers: Process Class Specs
-            :type process_class_organizers: SpecsParameter(ProcessClassOrganizerSpec)
-            :param link_providers: Link Provider Specs
-            :type link_providers: SpecsParameter(LinkProviderSpec)
+        :param name: Full name of the ZenPack (ZenPacks.zenoss.MyZenPack)
+        :type name: str
+        :param zProperties: zProperty Specs
+        :type zProperties: SpecsParameter(ZPropertySpec)
+        :param classes: Class Specs
+        :type classes: SpecsParameter(ClassSpec)
+        :param class_relationships: Class Relationship Specs
+        :type class_relationships: list(RelationshipSchemaSpec)
+        :yaml_block_style class_relationships: True
+        :param device_classes: DeviceClass Specs
+        :type device_classes: SpecsParameter(DeviceClassSpec)
+        :param event_classes: EventClass Specs
+        :type event_classes: SpecsParameter(EventClassSpec)
+        :param process_class_organizers: Process Class Specs
+        :type process_class_organizers:
+            SpecsParameter(ProcessClassOrganizerSpec)
+        :param link_providers: Link Provider Specs
+        :type link_providers: SpecsParameter(LinkProviderSpec)
         """
         super(ZenPackSpec, self).__init__(_source_location=_source_location)
         if zplog:
             self.LOG = zplog
         self.name = name
-        self.LOG.debug("------ {} ------".format(self.name))
+        self.LOG.debug("------ %s ------", self.name)
         self.id_prefix = name.replace(".", "_")
 
         self.NEW_COMPONENT_TYPES = []
@@ -145,10 +149,13 @@ class ZenPackSpec(Spec):
 
         # zProperties
         self.zProperties = self.specs_from_param(
-            ZPropertySpec, 'zProperties', zProperties, zplog=self.LOG)
+            ZPropertySpec, "zProperties", zProperties, zplog=self.LOG
+        )
 
         # Classes
-        self.classes = self.specs_from_param(ClassSpec, 'classes', classes, zplog=self.LOG)
+        self.classes = self.specs_from_param(
+            ClassSpec, "classes", classes, zplog=self.LOG
+        )
         # deal with float order parameters if they exist
         self.normalize_child_order(self.classes.values())
 
@@ -159,10 +166,15 @@ class ZenPackSpec(Spec):
         self.class_relationships = []
         if class_relationships:
             if not isinstance(class_relationships, list):
-                raise ValueError("class_relationships must be a list, not a %s" % type(class_relationships))
+                raise ValueError(
+                    "class_relationships must be a list, not a %s"
+                    % type(class_relationships)
+                )
             for rel in class_relationships:
-                rel['zplog'] = self.LOG
-                self.class_relationships.append(RelationshipSchemaSpec(self, **rel))
+                rel["zplog"] = self.LOG
+                self.class_relationships.append(
+                    RelationshipSchemaSpec(self, **rel)
+                )
 
         # update relationships for ClassSpec child classes
         for rel in self.class_relationships:
@@ -173,23 +185,30 @@ class ZenPackSpec(Spec):
 
         # Device Classes
         self.device_classes = self.specs_from_param(
-            DeviceClassSpec, 'device_classes', device_classes, zplog=self.LOG)
+            DeviceClassSpec, "device_classes", device_classes, zplog=self.LOG
+        )
 
         # Event Classes
         self.event_classes = self.specs_from_param(
-            EventClassSpec, 'event_classes', event_classes)
+            EventClassSpec, "event_classes", event_classes
+        )
 
         # Process Classes
         self.process_class_organizers = self.specs_from_param(
-            ProcessClassOrganizerSpec, 'process_class_organizers', process_class_organizers)
+            ProcessClassOrganizerSpec,
+            "process_class_organizers",
+            process_class_organizers,
+        )
 
         # Link Providers
         self.link_providers = self.specs_from_param(
-            LinkProviderSpec, 'link_providers', link_providers, zplog=self.LOG)
+            LinkProviderSpec, "link_providers", link_providers, zplog=self.LOG
+        )
 
         # The parameters from which this zenpackspec was originally
         # instantiated.
         from ..params.ZenPackSpecParams import ZenPackSpecParams
+
         self.specparams = ZenPackSpecParams(
             name,
             zProperties=zProperties,
@@ -198,11 +217,12 @@ class ZenPackSpec(Spec):
             device_classes=device_classes,
             event_classes=event_classes,
             process_class_organizers=process_class_organizers,
-            zplog=self.LOG)
+            zplog=self.LOG,
+        )
 
     def plumb_properties(self):
         """
-            Plumb class properties by ancestors first
+        Plumb class properties by ancestors first
         """
         for class_ in self.classes.values():
             for name in class_.get_base_specs():
@@ -212,7 +232,7 @@ class ZenPackSpec(Spec):
 
     def plumb_relations(self):
         """
-            Plumb class relations by ancestors first
+        Plumb class relations by ancestors first
         """
         for class_ in self.classes.values():
             for name in class_.get_base_specs():
@@ -226,7 +246,9 @@ class ZenPackSpec(Spec):
     def ordered_classes(self):
         """Return ordered list of ClassSpec instances."""
         if not self._ordered_classes:
-            self._ordered_classes = sorted(self.classes.values(), key=operator.attrgetter('order'))
+            self._ordered_classes = sorted(
+                self.classes.values(), key=operator.attrgetter("order")
+            )
         return self._ordered_classes
 
     def create(self):
@@ -258,16 +280,19 @@ class ZenPackSpec(Spec):
         GSM.registerSubscriptionAdapter(
             DeviceLinkProvider,
             required=(Device,),
-            provided=IExpandedLinkProvider)
+            provided=IExpandedLinkProvider,
+        )
 
         for key, provider in six.iteritems(self.link_providers):
-            class_name = provider.link_class.split('.')
+            class_name = provider.link_class.split(".")
             try:
-                module = importlib.import_module('.'.join(class_name[:-1]))
-                klass = getattr(module, class_name[-1:][0], None)
+                module = importlib.import_module(".".join(class_name[:-1]))
+                klass = getattr(module, class_name[-1:][0], object)
             except (ImportError, AttributeError, IndexError):
-                self.LOG.warn('Problem attempting to find and load link_class '
-                              '{} for provider {}.'.format(provider.link_class, key))
+                self.LOG.warning(
+                    "Problem attempting to find and load link_class "
+                    "%s for provider %s.", provider.link_class, key
+                )
                 continue
 
             if Device not in inspect.getmro(klass):
@@ -275,7 +300,8 @@ class ZenPackSpec(Spec):
                 GSM.registerSubscriptionAdapter(
                     DeviceLinkProvider,
                     required=(klass,),
-                    provided=IExpandedLinkProvider)
+                    provided=IExpandedLinkProvider,
+                )
 
     def create_product_names(self):
         """Add all classes to ZenPack's productNames list.
@@ -284,98 +310,40 @@ class ZenPackSpec(Spec):
         created by create().
 
         """
-        productNames = getattr(self.zenpack_module, 'productNames', [])
+        productNames = getattr(self.zenpack_module, "productNames", [])
         self.zenpack_module.productNames = list(
-            set(self.classes) | set(productNames))
+            set(self.classes) | set(productNames)
+        )
 
     def create_ordered_component_tree(self):
         """Monkeypatch DeviceRouter.getComponentTree to order components."""
         device_meta_types = {
-            x.meta_type
-            for x in six.itervalues(self.classes)
-            if x.is_device}
+            x.meta_type for x in six.itervalues(self.classes) if x.is_device
+        }
 
         order = {
-            x.meta_type: x.scaled_order
-            for x in six.itervalues(self.classes)}
+            x.meta_type: x.scaled_order for x in six.itervalues(self.classes)
+        }
 
         def getComponentTree(self, uid=None, id=None, **kwargs):
             # We do our own sorting.
-            kwargs.pop('sorting_dict', None)
+            kwargs.pop("sorting_dict", None)
 
             # original is injected by monkeypatch.
-            result = original(self, uid=uid, id=id, **kwargs)
+            result = original(self, uid=uid, id=id, **kwargs)  # noqa: F821
 
             # Only change the order for custom device types.
             meta_type = self._getFacade().getInfo(uid=uid).meta_type
             if meta_type not in device_meta_types:
                 return result
 
-            return sorted(result, key=lambda x: order.get(x['id'], 100.0))
+            return sorted(result, key=lambda x: order.get(x["id"], 100.0))
 
         monkeypatch(DeviceRouter)(getComponentTree)
 
     def register_browser_resources(self):
         """Register browser resources if they exist."""
-        zenpack_path = get_zenpack_path(self.name)
-        if not zenpack_path:
-            return
-
-        resource_path = os.path.join(zenpack_path, 'resources')
-        if not os.path.isdir(resource_path):
-            return
-
-        directives = []
-        directives.append(
-            '<resourceDirectory name="{name}" directory="{directory}"/>'
-            .format(
-                name=self.name,
-                directory=resource_path))
-
-        def get_directive(name, for_, weight):
-            path = os.path.join(resource_path, '{}.js'.format(name))
-            if not os.path.isfile(path):
-                return
-
-            return (
-                '<viewlet'
-                '    name="js-{zenpack_name}-{name}"'
-                '    paths="/++resource++{zenpack_name}/{name}.js"'
-                '    for="{for_}"'
-                '    weight="{weight}"'
-                '    manager="Products.ZenUI3.browser.interfaces.IJavaScriptSrcManager"'
-                '    class="Products.ZenUI3.browser.javascript.JavaScriptSrcBundleViewlet"'
-                '    permission="zope.Public"'
-                '    />'
-                .format(
-                    name=name,
-                    for_=for_,
-                    weight=weight,
-                    zenpack_name=self.name))
-
-        directives.append(get_directive('global', '*', 20))
-
-        for spec in self.ordered_classes:
-            if spec.is_device:
-                for_ = get_symbol_name(self.name, spec.name, spec.name)
-
-                directives.append(get_directive('device', for_, 21))
-                directives.append(get_directive(spec.name, for_, 22))
-
-        # Eliminate None items from list of directives.
-        directives = tuple(x for x in directives if x)
-
-        if directives:
-            zcml.load_string(
-                '<configure xmlns="http://namespaces.zope.org/browser">'
-                '<include package="Products.Five" file="meta.zcml"/>'
-                '<include package="Products.Five.viewlet" file="meta.zcml"/>'
-                '{directives}'
-                '</configure>'
-                .format(
-                    name=self.name,
-                    directory=resource_path,
-                    directives=''.join(directives)))
+        _register_browser_resources(self.name, self.ordered_classes)
 
     def apply_platform_patches(self):
         """Apply necessary patches to platform code."""
@@ -392,9 +360,10 @@ class ZenPackSpec(Spec):
         """
         try:
             from Products.ZenHub.XmlRpcService import XmlRpcService
+
             if types.UnicodeType not in XmlRpcService.PRIMITIVES:
                 XmlRpcService.PRIMITIVES.append(types.UnicodeType)
-        except Exception:
+        except (AttributeError, ImportError):
             # The above may become wrong in future platform versions.
             pass
 
@@ -409,32 +378,34 @@ class ZenPackSpec(Spec):
             return snippet
 
         attributes = {
-            '__allow_access_to_unprotected_subobjects__': True,
-            'weight': 20,
-            'snippet': snippet_method,
-            }
+            "__allow_access_to_unprotected_subobjects__": True,
+            "weight": 20,
+            "snippet": snippet_method,
+        }
 
         snippet_class = self.create_class(
             get_symbol_name(self.name),
-            get_symbol_name(self.name, 'schema'),
+            get_symbol_name(self.name, "schema"),
             name,
             (JavaScriptSnippet,),
-            attributes)
+            attributes,
+        )
 
         try:
-            target_name = 'global' if classes[0] is None else 'device'
+            target_name = "global" if classes[0] is None else "device"
         except Exception:
-            target_name = 'global'
+            target_name = "global"
 
         for klass in classes:
             GSM.registerAdapter(
                 snippet_class,
-                (klass,) + (IDefaultBrowserLayer, IBrowserView, IMainSnippetManager),
+                (klass,)
+                + (IDefaultBrowserLayer, IBrowserView, IMainSnippetManager),
                 IViewlet,
-                'js-snippet-{name}-{target_name}'
-                .format(
-                    name=self.name,
-                    target_name=target_name))
+                "js-snippet-{name}-{target_name}".format(
+                    name=self.name, target_name=target_name
+                ),
+            )
 
         return snippet_class
 
@@ -448,11 +419,10 @@ class ZenPackSpec(Spec):
             "(function(){{\n"
             "var ZC = Ext.ns('Zenoss.component');\n"
             "{snippets}"
-            "}})();\n"
-            .format(
-                snippets=''.join(snippets)))
+            "}})();\n".format(snippets="".join(snippets))
+        )
 
-        return self.create_js_snippet('global', snippet)
+        return self.create_js_snippet("global", snippet)
 
     def create_device_js_snippet(self):
         """Register device JavaScript snippet."""
@@ -463,15 +433,17 @@ class ZenPackSpec(Spec):
         device_classes = [
             x.model_class
             for x in six.itervalues(self.classes)
-            if Device in x.resolved_bases]
+            if Device in x.resolved_bases
+        ]
 
         # Add imported device objects
         for kls in six.itervalues(self.imported_classes):
-            if 'deviceClass' in [x[0] for x in kls._relations]:
+            if "deviceClass" in [x[0] for x in kls._relations]:
                 device_classes.append(kls)
 
         return self.create_js_snippet(
-            'device', snippet, classes=device_classes)
+            "device", snippet, classes=device_classes
+        )
 
     @property
     def device_js_snippet(self):
@@ -492,21 +464,23 @@ class ZenPackSpec(Spec):
         if not [x for x in snippets if x]:
             return ""
 
-        link_code = JS_LINK_FROM_GRID.replace('{zenpack_id_prefix}', self.id_prefix)
+        link_code = JS_LINK_FROM_GRID.replace(
+            "{zenpack_id_prefix}", self.id_prefix
+        )
         return (
             "(function(){{\n"
             "var ZC = Ext.ns('Zenoss.component');\n"
             "{link_code}\n"
             "{snippets}"
-            "}})();\n"
-            .format(
-                link_code=link_code,
-                snippets=''.join(snippets)))
+            "}})();\n".format(link_code=link_code, snippets="".join(snippets))
+        )
 
     @property
     def dynamicview_nav_js_snippet(self):
         if not self._dynamicview_nav_js_snippet:
-            self._dynamicview_nav_js_snippet = self.create_dynamicview_nav_js_snippet()
+            self._dynamicview_nav_js_snippet = (
+                self.create_dynamicview_nav_js_snippet()
+            )
         return self._dynamicview_nav_js_snippet
 
     def create_dynamicview_nav_js_snippet(self):
@@ -516,7 +490,7 @@ class ZenPackSpec(Spec):
         service_view_metatypes = set()
         for kls in self.ordered_classes:
             # Currently only supporting service_view.
-            if 'service_view' in (kls.dynamicview_views or []):
+            if "service_view" in (kls.dynamicview_views or []):
                 service_view_metatypes.add(kls.meta_type)
 
         if service_view_metatypes:
@@ -534,11 +508,13 @@ class ZenPackSpec(Spec):
                 "        }}\n"
                 "    }}\n"
                 "}}]);\n"
-                ).format(
-                    zenpack_id_prefix=self.id_prefix,
-                    cases='\n            '.join(
-                        "case '{}': return true;".format(x)
-                        for x in service_view_metatypes))
+            ).format(
+                zenpack_id_prefix=self.id_prefix,
+                cases="\n            ".join(
+                    "case '{}': return true;".format(x)
+                    for x in service_view_metatypes
+                ),
+            )
         else:
             return ""
 
@@ -558,40 +534,45 @@ class ZenPackSpec(Spec):
 
     def create_zenpack_class(self):
         """Create ZenPack class."""
+        from ..base.ZenPack import ZenPack
+
         packZProperties = [
-            x.packZProperties for x in six.itervalues(self.zProperties)]
+            x.packZProperties for x in six.itervalues(self.zProperties)
+        ]
 
         packZProperties_data = {}
         for x in six.itervalues(self.zProperties):
             packZProperties_data.update(x.packZProperties_data)
 
         attributes = {
-            'packZProperties': packZProperties,
-            'packZProperties_data': packZProperties_data,
-            }
+            "packZProperties": packZProperties,
+            "packZProperties_data": packZProperties_data,
+        }
 
-        attributes['device_classes'] = self.device_classes
-        attributes['event_classes'] = self.event_classes
-        attributes['process_class_organizers'] = self.process_class_organizers
-        attributes['_v_specparams'] = self.specparams
-        attributes['NEW_COMPONENT_TYPES'] = self.NEW_COMPONENT_TYPES
-        attributes['NEW_RELATIONS'] = self.NEW_RELATIONS
-        attributes['GLOBAL_CATALOGS'] = []
+        attributes["device_classes"] = self.device_classes
+        attributes["event_classes"] = self.event_classes
+        attributes["process_class_organizers"] = self.process_class_organizers
+        attributes["_v_specparams"] = self.specparams
+        attributes["NEW_COMPONENT_TYPES"] = self.NEW_COMPONENT_TYPES
+        attributes["NEW_RELATIONS"] = self.NEW_RELATIONS
+        attributes["GLOBAL_CATALOGS"] = []
         global_catalog_classes = {}
-        for (class_, class_spec) in self.classes.items():
+        for class_, class_spec in self.classes.items():
             for property_spec in class_spec.properties.values():
-                if property_spec.index_scope in ('both', 'global'):
+                if property_spec.index_scope in ("both", "global"):
                     global_catalog_classes[class_] = True
                     continue
         for class_ in global_catalog_classes:
             catalog = ".".join([self.name, class_]).replace(".", "_")
-            attributes['GLOBAL_CATALOGS'].append('{}Search'.format(catalog))
+            attributes["GLOBAL_CATALOGS"].append("{}Search".format(catalog))
 
-        cls = self.create_class(get_symbol_name(self.name),
-                            get_symbol_name(self.name, 'schema'),
-                            'ZenPack',
-                            (ZenPack,),
-                            attributes)
+        cls = self.create_class(
+            get_symbol_name(self.name),
+            get_symbol_name(self.name, "schema"),
+            "ZenPack",
+            (ZenPack,),
+            attributes,
+        )
         return cls
 
     def test_setup(self):
@@ -607,3 +588,68 @@ class ZenPackSpec(Spec):
 
         self.create_global_js_snippet()
         self.create_device_js_snippet()
+
+
+_resourceDirectory_zcml = (
+    '<resourceDirectory name="{name}" directory="{directory}"/>'
+)
+_viewlet_zcml = (
+    "<viewlet"
+    '    name="js-{zenpack_name}-{name}"'
+    '    paths="/++resource++{zenpack_name}/{name}.js"'
+    '    for="{for_}"'
+    '    weight="{weight}"'
+    '    manager="Products.ZenUI3.browser.interfaces.IJavaScriptSrcManager"'
+    '    class="Products.ZenUI3.browser.javascript.JavaScriptSrcBundleViewlet"'
+    '    permission="zope.Public"'
+    "    />"
+)
+_configure_zcml = (
+    '<configure xmlns="http://namespaces.zope.org/browser">'
+    '<include package="Products.Five" file="meta.zcml"/>'
+    '<include package="Products.Five.viewlet" file="meta.zcml"/>'
+    "{directives}"
+    "</configure>"
+)
+
+
+def _register_browser_resources(name, ordered_classes):
+    """Register browser resources if they exist."""
+    zenpack_path = get_zenpack_path(name)
+    if not zenpack_path:
+        return
+
+    resource_path = os.path.join(zenpack_path, "resources")
+    if not os.path.isdir(resource_path):
+        return
+
+    directives = []
+    directives.append(
+        _resourceDirectory_zcml.format(name=name, directory=resource_path)
+    )
+
+    def get_directive(name, for_, weight):
+        path = os.path.join(resource_path, "{}.js".format(name))
+        if not os.path.isfile(path):
+            return
+
+        return _viewlet_zcml.format(
+            name=name, for_=for_, weight=weight, zenpack_name=name
+        )
+
+    directives.append(get_directive("global", "*", 20))
+
+    for spec in ordered_classes:
+        if spec.is_device:
+            for_ = get_symbol_name(name, spec.name, spec.name)
+
+            directives.append(get_directive("device", for_, 21))
+            directives.append(get_directive(spec.name, for_, 22))
+
+    # Eliminate None items from list of directives.
+    directives = tuple(x for x in directives if x)
+
+    if directives:
+        zcml.load_string(
+            _configure_zcml.format(directives="".join(directives))
+        )
